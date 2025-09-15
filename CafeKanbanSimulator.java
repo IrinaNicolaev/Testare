@@ -32,6 +32,7 @@ public class CafeKanbanSimulator extends JFrame {
         PREP_TIMES.put("Cappuccino", 5);
         PREP_TIMES.put("Raf", 10);
         PREP_TIMES.put("Apă", 0);
+        PREP_TIMES.put("Frappuccino", 2);
     }
 
     // Emojis pentru băuturi
@@ -43,6 +44,7 @@ public class CafeKanbanSimulator extends JFrame {
         map.put("Cappuccino", "🍵");
         map.put("Raf", "🍶");
         map.put("Apă", "💧");
+        map.put("Frappuccino", "☕");
         DRINK_EMOJIS = Collections.unmodifiableMap(map);
     }
 
@@ -55,6 +57,7 @@ public class CafeKanbanSimulator extends JFrame {
         map.put("Cappuccino", "/photo/cappuccino.png");
         map.put("Raf", "/photo/raf.png");
         map.put("Apă", "/photo/water.png");
+        map.put("Frappuccino", "/photo/frappuccino.png");
         DRINK_IMAGE_PATHS = Collections.unmodifiableMap(map);
     }
 
