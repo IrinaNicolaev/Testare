@@ -2,15 +2,21 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Timer;
+import java.util.TimerTask;
 
 public class CafeKanbanSimulator extends JFrame {
     private JPanel ordersPanel, preparingPanel, completedPanel;
-    private JButton addButton, startButton, stopButton, resetButton, menuButton;
+    private JButton startButton, stopButton, resetButton, menuButton;
     private JComboBox<String> clientBox;
-    private Timer timer;
+    private Timer mainTimer;
+    private Timer intervalTimer;
     private String selectedDrink = "Espresso"; // Default
+    private String baseTitle = "Cafe Kanban Simulator ☕";
+    private boolean isWorking = true;
 
     // 🎨 Paletă de culori
     private final Color UNIVERSAL_BG = new Color(250, 246, 240);
@@ -53,13 +59,13 @@ public class CafeKanbanSimulator extends JFrame {
     }
 
     public CafeKanbanSimulator() {
-        setTitle("Cafe Kanban Simulator ☕");
+        setTitle(baseTitle);
         setSize(950, 600);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         getContentPane().setBackground(UNIVERSAL_BG);
 
-        // 🔝 Top panel cu layout modern
+        // Top panel 
         JPanel topPanel = new JPanel(new GridBagLayout());
         topPanel.setBackground(UNIVERSAL_BG);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -67,7 +73,6 @@ public class CafeKanbanSimulator extends JFrame {
 
         clientBox = new JComboBox<>(new String[]{"Daniela", "Laurențiu", "Mărioara", "Ion"});
         menuButton = new JButton("Meniu");
-        addButton = new JButton("➕ Adaugă în coadă");
 
         // Stilul butonului meniu
         menuButton.setBackground(new Color(139, 69, 19));
@@ -83,12 +88,9 @@ public class CafeKanbanSimulator extends JFrame {
         gbc.gridx = 2;
         topPanel.add(menuButton, gbc);
 
-        gbc.gridx = 3;
-        topPanel.add(addButton, gbc);
-
         add(topPanel, BorderLayout.NORTH);
 
-        // 🟫 Panouri Kanban
+        // Panouri Kanban
         ordersPanel = createColumn("📥 Coada", QUEUE_COLOR);
         preparingPanel = createColumn("⚙️ În pregătire", PREP_COLOR);
         completedPanel = createColumn("✅ Finalizat", FINISHED_COLOR);
@@ -101,7 +103,7 @@ public class CafeKanbanSimulator extends JFrame {
         kanbanPanel.add(new JScrollPane(completedPanel));
         add(kanbanPanel, BorderLayout.CENTER);
 
-        // 🔘 Panou de control jos
+        // Panou de control jos
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         bottomPanel.setBackground(UNIVERSAL_BG);
         startButton = new JButton("▶️ Start");
@@ -112,17 +114,206 @@ public class CafeKanbanSimulator extends JFrame {
         bottomPanel.add(resetButton);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // 🎯 Acțiuni
+        // Acțiuni
         menuButton.addActionListener(e -> showMenuDialog());
-        addButton.addActionListener(e -> addOrder());
-        startButton.addActionListener(e -> startSimulation());
+        startButton.addActionListener(e -> showSimulationModeDialog());
         stopButton.addActionListener(e -> stopSimulation());
         resetButton.addActionListener(e -> resetSimulation());
     }
 
+    private void showSimulationModeDialog() {
+        JDialog modeDialog = new JDialog(this, "Mod Simulare", true);
+        modeDialog.setSize(400, 300);
+        modeDialog.setLocationRelativeTo(this);
+        modeDialog.setLayout(new BorderLayout());
+        modeDialog.getContentPane().setBackground(UNIVERSAL_BG);
+
+        JPanel modePanel = new JPanel(new GridLayout(3, 1, 10, 10));
+        modePanel.setBackground(UNIVERSAL_BG);
+        modePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Normal mode button
+        JButton normalButton = new JButton("Normal (procesare continuă)");
+        normalButton.setFont(new Font("Arial", Font.BOLD, 14));
+        normalButton.addActionListener(e -> {
+            modeDialog.dispose();
+            startNormalSimulation();
+        });
+
+        // Interval mode button
+        JButton intervalButton = new JButton("Cu intervale (la fiecare 2 secunde)");
+        intervalButton.setFont(new Font("Arial", Font.BOLD, 14));
+        intervalButton.addActionListener(e -> {
+            modeDialog.dispose();
+            startIntervalSimulation();
+        });
+
+        // Scheduled time mode button
+        JButton timeButton = new JButton("La o anumită oră");
+        timeButton.setFont(new Font("Arial", Font.BOLD, 14));
+        timeButton.addActionListener(e -> {
+            modeDialog.dispose();
+            showTimeSelectionDialog();
+        });
+
+        modePanel.add(normalButton);
+        modePanel.add(intervalButton);
+        modePanel.add(timeButton);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(UNIVERSAL_BG);
+        JButton cancelButton = new JButton("Anulează");
+        cancelButton.addActionListener(e -> modeDialog.dispose());
+        buttonPanel.add(cancelButton);
+
+        modeDialog.add(modePanel, BorderLayout.CENTER);
+        modeDialog.add(buttonPanel, BorderLayout.SOUTH);
+        modeDialog.setVisible(true);
+    }
+
+    private void showTimeSelectionDialog() {
+        JDialog timeDialog = new JDialog(this, "Selectează Ora", true);
+        timeDialog.setSize(300, 200);
+        timeDialog.setLocationRelativeTo(this);
+        timeDialog.setLayout(new BorderLayout());
+        timeDialog.getContentPane().setBackground(UNIVERSAL_BG);
+
+        JPanel timePanel = new JPanel(new GridBagLayout());
+        timePanel.setBackground(UNIVERSAL_BG);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        JLabel timeLabel = new JLabel("Ora (HH:mm):");
+        JSpinner hourSpinner = new JSpinner(new SpinnerNumberModel(11, 0, 23, 1));
+        JSpinner minuteSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        timePanel.add(timeLabel, gbc);
+        gbc.gridx = 1;
+        timePanel.add(hourSpinner, gbc);
+        gbc.gridx = 2;
+        timePanel.add(new JLabel(":"), gbc);
+        gbc.gridx = 3;
+        timePanel.add(minuteSpinner, gbc);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(UNIVERSAL_BG);
+        
+        JButton okButton = new JButton("OK");
+        JButton cancelButton = new JButton("Anulează");
+
+        okButton.addActionListener(e -> {
+            int hour = (Integer) hourSpinner.getValue();
+            int minute = (Integer) minuteSpinner.getValue();
+            timeDialog.dispose();
+            startScheduledSimulation(hour, minute);
+        });
+
+        cancelButton.addActionListener(e -> timeDialog.dispose());
+
+        buttonPanel.add(okButton);
+        buttonPanel.add(cancelButton);
+
+        timeDialog.add(timePanel, BorderLayout.CENTER);
+        timeDialog.add(buttonPanel, BorderLayout.SOUTH);
+        timeDialog.setVisible(true);
+    }
+
+    private void startNormalSimulation() {
+        stopSimulation();
+        setTitle(baseTitle);
+        
+        mainTimer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                SwingUtilities.invokeLater(() -> processOrders());
+            }
+        };
+        mainTimer.scheduleAtFixedRate(task, 0, 1000); // la fiecare secundă
+        
+        JOptionPane.showMessageDialog(this, "Simulare normală pornită!", "Info", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void startIntervalSimulation() {
+        stopSimulation();
+        isWorking = true;
+        setTitle(baseTitle + " - Lucrează");
+        
+        mainTimer = new Timer();
+        intervalTimer = new Timer();
+        
+        // Timer pentru procesarea comenzilor (doar când lucrează)
+        TimerTask processTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (isWorking) {
+                    SwingUtilities.invokeLater(() -> processOrders());
+                }
+            }
+        };
+        mainTimer.scheduleAtFixedRate(processTask, 0, 1000); // verifică la fiecare secundă
+        
+        // Timer pentru alternarea între lucru și pauză
+        TimerTask intervalTask = new TimerTask() {
+            @Override
+            public void run() {
+                SwingUtilities.invokeLater(() -> {
+                    isWorking = !isWorking;
+                    if (isWorking) {
+                        setTitle(baseTitle + " - Lucrează");
+                    } else {
+                        setTitle(baseTitle + " - Pauză");
+                    }
+                });
+            }
+        };
+        intervalTimer.scheduleAtFixedRate(intervalTask, 2000, 2000); // la fiecare 2 secunde
+        
+        JOptionPane.showMessageDialog(this, "Simulare cu intervale de 2 secunde pornită!", "Info", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void startScheduledSimulation(int hour, int minute) {
+        stopSimulation();
+        setTitle(baseTitle);
+        
+        LocalTime now = LocalTime.now();
+        LocalTime targetTime = LocalTime.of(hour, minute);
+        
+        long delayMillis;
+        if (targetTime.isAfter(now)) {
+            delayMillis = java.time.Duration.between(now, targetTime).toMillis();
+        } else {
+            // Next day
+            delayMillis = java.time.Duration.between(now, targetTime.plusHours(24)).toMillis();
+        }
+        
+        mainTimer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                SwingUtilities.invokeLater(() -> {
+                    processOrders();
+                    JOptionPane.showMessageDialog(CafeKanbanSimulator.this, 
+                        "Simulare executată la " + targetTime.format(DateTimeFormatter.ofPattern("HH:mm")) + "!", 
+                        "Simulare Programată", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                });
+            }
+        };
+        
+        mainTimer.schedule(task, delayMillis);
+        
+        JOptionPane.showMessageDialog(this, 
+            "Simulare programată pentru " + targetTime.format(DateTimeFormatter.ofPattern("HH:mm")) + 
+            "\n(în " + (delayMillis / 1000 / 60) + " minute)", 
+            "Info", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+
     private void showMenuDialog() {
         JDialog menuDialog = new JDialog(this, "Meniu Băuturi", true);
-        menuDialog.setSize(400, 300);
+        menuDialog.setSize(600, 600);
         menuDialog.setLocationRelativeTo(this);
         menuDialog.setLayout(new BorderLayout());
 
@@ -242,11 +433,6 @@ public class CafeKanbanSimulator extends JFrame {
         return panel;
     }
 
-    private void addOrder() {
-        String client = (String) clientBox.getSelectedItem();
-        addOrderToQueue(client, selectedDrink);
-    }
-
     private void addOrderWithSelectedDrink() {
         String client = (String) clientBox.getSelectedItem();
         addOrderToQueue(client, selectedDrink);
@@ -274,26 +460,16 @@ public class CafeKanbanSimulator extends JFrame {
         ordersPanel.repaint();
     }
 
-    private void startSimulation() {
-        if (timer != null) {
-            timer.cancel();
-        }
-        timer = new Timer();
-
-        // Verificăm coada la fiecare secundă
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                SwingUtilities.invokeLater(() -> processOrders());
-            }
-        }, 0, 1000);
-    }
-
     private void stopSimulation() {
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
+        if (mainTimer != null) {
+            mainTimer.cancel();
+            mainTimer = null;
         }
+        if (intervalTimer != null) {
+            intervalTimer.cancel();
+            intervalTimer = null;
+        }
+        setTitle(baseTitle); // resetează titlul
     }
 
     private void resetSimulation() {
@@ -320,7 +496,8 @@ public class CafeKanbanSimulator extends JFrame {
             int prepTime = PREP_TIMES.getOrDefault(drink, 3);
 
             // programăm mutarea în Completed după timpul specific băuturii
-            new Timer().schedule(new TimerTask() {
+            Timer completionTimer = new Timer();
+            TimerTask completionTask = new TimerTask() {
                 @Override
                 public void run() {
                     SwingUtilities.invokeLater(() -> {
@@ -329,7 +506,8 @@ public class CafeKanbanSimulator extends JFrame {
                         revalidatePanels();
                     });
                 }
-            }, prepTime * 1000L);
+            };
+            completionTimer.schedule(completionTask, prepTime * 1000);
         }
 
         revalidatePanels();
@@ -342,6 +520,12 @@ public class CafeKanbanSimulator extends JFrame {
         ordersPanel.repaint();
         preparingPanel.repaint();
         completedPanel.repaint();
+    }
+
+    @Override
+    public void dispose() {
+        stopSimulation();
+        super.dispose();
     }
 
     public static void main(String[] args) {
