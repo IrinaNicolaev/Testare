@@ -4,21 +4,21 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;       // java.util.Timer
-import java.util.TimerTask;  // java.util.TimerTask
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class QuizTimersApp {
 
     // ---- UI ----
     private JFrame frame;
-    private JLabel timeLabel;         // contorul rămas (mm:ss)
-    private JTextArea questionArea;   // întrebare curentă
-    private JLabel indexLabel;        // index întrebare
-    private JButton answerBtn;        // simulăm răspuns corect (+1 punct)
-    private JButton nextBtn;          // trecem manual la următoarea întrebare
-    private JLabel scoreLabel;        // scor curent
-    private JButton startBtn;         // pornește testul
-    private JButton stopBtn;          // oprește testul
+    private JLabel timeLabel;
+    private JTextArea questionArea;
+    private JLabel indexLabel;
+    private JButton answerBtn;
+    private JButton nextBtn;
+    private JLabel scoreLabel;
+    private JButton startBtn;
+    private JButton stopBtn;
 
     // ---- Model / stare ----
     private final List<String> questions = Arrays.asList(
