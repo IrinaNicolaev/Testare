@@ -7,8 +7,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Timer;       // java.util.Timer
-import java.util.TimerTask;  // java.util.TimerTask
+import java.util.Timer;       
+import java.util.TimerTask; 
 
 
 public class QuizTimersApp {
