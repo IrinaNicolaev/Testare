@@ -4,15 +4,15 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class HelloController {
 
@@ -28,47 +28,131 @@ public class HelloController {
     @FXML
     private TextField timeInput;
 
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+    @FXML
+    private ImageView caruselView;
 
-    private ScheduledFuture<?> task1;
-    private ScheduledFuture<?> task2;
-    private ScheduledFuture<?> task3;
-    private ScheduledFuture<?> task4;
+    @FXML
+    private ImageView fireworksView;
 
+
+    private Timer timer1;
+    private Timer timer2;
+    private Timer timer3;
+    private Timer timer4;
+
+    // ===== Timer 1 – Carusel GIF =====
     @FXML
     public void startTimer1() {
-        if (task1 == null || task1.isCancelled() || task1.isDone()) {
-            task1 = scheduler.scheduleAtFixedRate(() ->
+        if (timer1 == null) {
+            // Pornim GIF
+            Image gif = new Image(getClass().getResourceAsStream("carusel.gif"));
+            caruselView.setImage(gif);
+
+            timer1 = new Timer();
+            timer1.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
                     Platform.runLater(() ->
-                            labelTimer1.setText("Timer 1 rulează: " + System.currentTimeMillis() / 1000 + "s")),
-                    0, 1, TimeUnit.SECONDS);
+                            labelTimer1.setText("Timp de funcționare " + (System.currentTimeMillis() / 1000) + "s"));
+                }
+            }, 0, 1000);
         } else {
-            task1.cancel(true);
-            Platform.runLater(() -> labelTimer1.setText("Timer 1 oprit"));
+            // Oprire
+            timer1.cancel();
+            timer1 = null;
+            Platform.runLater(() -> labelTimer1.setText("S-a oprit"));
+
+            Image staticFrame = new Image(getClass().getResourceAsStream("static.png"));
+            caruselView.setImage(staticFrame);
         }
     }
 
-    @FXML
-    public void startTimer2() {
-        if (task2 == null || task2.isCancelled() || task2.isDone()) {
-            final int[] counter = {0};
-            task2 = scheduler.scheduleAtFixedRate(() ->
-                    Platform.runLater(() -> {
-                        counter[0] = (counter[0] % 3) + 1;
-                        labelTimer2.setText("Timer 2 rulează" + ".".repeat(counter[0]));
-                    }),
-                    0, 1, TimeUnit.SECONDS);
+// ===== Timer 2 – Carusel GIF =====
+@FXML
+public void startTimer2() {
+    if (timer2 == null) {
+        // Ascunde artificiile la început
+        fireworksView.setVisible(false);
+        
+        timer2 = new Timer();
+        final int[] counter = {0};
 
-            scheduler.schedule(() -> {
-                task2.cancel(true);
-                Platform.runLater(() -> labelTimer2.setText("5 secunde au trecut!"));
-            }, 5, TimeUnit.SECONDS);
-        } else {
-            task2.cancel(true);
-            Platform.runLater(() -> labelTimer2.setText("Timer 2 oprit"));
-        }
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                Platform.runLater(() -> {
+                    counter[0] = (counter[0] % 3) + 1;
+                    labelTimer2.setText("Runda a început" + ".".repeat(counter[0]));
+                });
+            }
+        };
+
+        timer2.scheduleAtFixedRate(task, 0, 1000);
+
+        // Timer separat pentru oprire după 5 secunde și afișare artificii
+        Timer stopTimer = new Timer();
+        stopTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                // Oprește timer2
+                if (timer2 != null) {
+                    timer2.cancel();
+                    timer2 = null;
+                }
+                
+                Platform.runLater(() -> {
+                    labelTimer2.setText("5 secunde au trecut!");
+                    
+                    try {
+                        // Încearcă să încarci GIF-ul artificiilor
+                        Image fireworksGif = new Image(getClass().getResourceAsStream("Fireworks.gif"));
+                        
+                        if (fireworksGif.isError()) {
+                            System.err.println("Eroare la încărcarea fireworks.gif");
+                            labelTimer2.setText("Eroare: fireworks.gif nu a fost găsit!");
+                        } else {
+                            // Setează și afișează artificiile
+                            fireworksView.setImage(fireworksGif);
+                            fireworksView.setVisible(true);
+                            
+                            // Debug - confirmă că artificiile sunt afișate
+                            System.out.println("Artificiile sunt afișate!");
+                            
+                            // Ascunde artificiile după 3 secunde
+                            Timer hideTimer = new Timer();
+                            hideTimer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    Platform.runLater(() -> {
+                                        fireworksView.setVisible(false);
+                                        System.out.println("Artificiile sunt ascunse!");
+                                    });
+                                }
+                            }, 3000);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Excepție la încărcarea artificiilor: " + e.getMessage());
+                        labelTimer2.setText("Eroare la încărcarea artificiilor!");
+                    }
+                });
+            }
+        }, 5000);
+
+    } else {
+        // Oprire manuală
+        timer2.cancel();
+        timer2 = null;
+        Platform.runLater(() -> {
+            labelTimer2.setText("Timer 2 oprit");
+            fireworksView.setVisible(false);
+        });
     }
+}
 
+
+
+
+    // ===== Timer 3 – La o oră specificată =====
     @FXML
     public void startTimer3() {
         String input = timeInput.getText().trim();
@@ -81,18 +165,35 @@ public class HelloController {
         try {
             long delay = getDelayUntil(input);
 
-            if (task3 == null || task3.isCancelled() || task3.isDone()) {
-                task3 = scheduler.schedule(() ->
-                        Platform.runLater(() -> labelTimer3.setText("A sosit ora " + input + "!")),
-                        delay, TimeUnit.MILLISECONDS);
+            if (timer3 == null) {
+                timer3 = new Timer();
+                timer3.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        Platform.runLater(() -> {
+                            labelTimer3.setText("E seară deja " + input + "!");
+                            Image nightGif = new Image(getClass().getResourceAsStream("Night.gif"));
+                            caruselView.setImage(nightGif);
+                            caruselView.setStyle("-fx-background-color: black;");
+                        });
+                    }
+                }, delay);
 
-                labelTimer3.setText("Timer programat pentru " + input);
+                labelTimer3.setText("Se va însera la ora " + input);
+
             } else {
-                task3.cancel(true);
-                Platform.runLater(() -> labelTimer3.setText("Timer oprit"));
+                timer3.cancel();
+                timer3 = null;
+                Platform.runLater(() -> {
+                    labelTimer3.setText("Timer oprit");
+                    Image staticImg = new Image(getClass().getResourceAsStream("static.png"));
+                    caruselView.setImage(staticImg);
+                    caruselView.setStyle("");
+                });
             }
+
         } catch (Exception e) {
-            labelTimer3.setText("Format invalid! Folosește HH:mm (ex: 07:45)");
+            labelTimer3.setText("Aceea nu este o oră! Folosește HH:mm");
         }
     }
 
@@ -107,27 +208,35 @@ public class HelloController {
                 .withNano(0);
 
         if (targetDateTime.isBefore(now)) {
-            // Dacă ora a trecut → așteaptă până mâine
             targetDateTime = targetDateTime.plusDays(1);
         }
 
         return Duration.between(now, targetDateTime).toMillis();
     }
 
+    // ===== Timer 4 – Joules consumați =====
     @FXML
     public void startTimer4() {
-        if (task4 == null || task4.isCancelled() || task4.isDone()) {
-            task4 = scheduler.scheduleAtFixedRate(() ->
+        if (timer4 == null) {
+            timer4 = new Timer();
+            timer4.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
                     Platform.runLater(() ->
-                            labelTimer4.setText("Timer 4 rulează: " + System.currentTimeMillis() / 1000 + "s")),
-                    2, 3, TimeUnit.SECONDS);
+                            labelTimer4.setText("Joules (J) consumați : " + (System.currentTimeMillis() / 1000) + "s"));
+                }
+            }, 2000, 3000);
         } else {
-            task4.cancel(true);
-            Platform.runLater(() -> labelTimer4.setText("Timer 4 oprit"));
+            timer4.cancel();
+            timer4 = null;
+            Platform.runLater(() -> labelTimer4.setText("A fost inutil?"));
         }
     }
 
     public void shutdown() {
-        scheduler.shutdown();
+        if (timer1 != null) timer1.cancel();
+        if (timer2 != null) timer2.cancel();
+        if (timer3 != null) timer3.cancel();
+        if (timer4 != null) timer4.cancel();
     }
 }

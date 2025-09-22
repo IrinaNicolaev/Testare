@@ -9,7 +9,7 @@ public class HelloApplication extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("hello-view.fxml"));
-        Scene scene = new Scene(loader.load(), 500, 500);
+        Scene scene = new Scene(loader.load(), 700, 900);
 
         primaryStage.setTitle("Aplicație cu 4 Timere");
         primaryStage.setScene(scene);
