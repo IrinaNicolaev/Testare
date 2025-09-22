@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.sotimer1.HelloController"
+      spacing="10" alignment="CENTER" prefWidth="400" prefHeight="200">
+
+    <Label text="Timer 1:"/>
+    <Label fx:id="labelTimer1" style="-fx-font-size: 14; -fx-text-fill: blue;"/>
+
+    <Label text="Timer 2:"/>
+    <Label fx:id="labelTimer2" style="-fx-font-size: 14; -fx-text-fill: green;"/>
+
+    <Label text="Timer 3:"/>
+    <Label fx:id="labelTimer3" style="-fx-font-size: 14; -fx-text-fill: red;"/>
+
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="Start Timer 1" onAction="#startTimer1"/>
+        <Button text="Start Timer 2" onAction="#startTimer2"/>
+        <Button text="Start Timer 3" onAction="#startTimer3"/>
+    </HBox>
+
+</VBox>
