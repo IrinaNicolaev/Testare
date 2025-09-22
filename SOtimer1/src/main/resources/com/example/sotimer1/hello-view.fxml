@@ -6,7 +6,7 @@
 <VBox xmlns="http://javafx.com/javafx/8"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.example.sotimer1.HelloController"
-      spacing="10" alignment="CENTER" prefWidth="400" prefHeight="200">
+      spacing="10" alignment="CENTER" prefWidth="400" prefHeight="250">
 
     <Label text="Timer 1:"/>
     <Label fx:id="labelTimer1" style="-fx-font-size: 14; -fx-text-fill: blue;"/>
@@ -17,10 +17,14 @@
     <Label text="Timer 3:"/>
     <Label fx:id="labelTimer3" style="-fx-font-size: 14; -fx-text-fill: red;"/>
 
+    <Label text="Timer 4:"/>
+    <Label fx:id="labelTimer4" style="-fx-font-size: 14; -fx-text-fill: purple;"/>
+
     <HBox spacing="10" alignment="CENTER">
         <Button text="Start Timer 1" onAction="#startTimer1"/>
         <Button text="Start Timer 2" onAction="#startTimer2"/>
         <Button text="Start Timer 3" onAction="#startTimer3"/>
+        <Button text="Start Timer 4" onAction="#startTimer4"/>
     </HBox>
 
 </VBox>
