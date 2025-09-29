@@ -5,64 +5,92 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.example.sotimer1.HelloController"
-            prefWidth="600" prefHeight="600">
-
+            prefWidth="650" prefHeight="650"
+            style="-fx-background-color: #f5f5f5;">
+    
     <!-- Titlu aplicație -->
     <top>
-        <Label text="⏱ Simulare Carusel"
-               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-padding: 10;"/>
+        <VBox alignment="CENTER" style="-fx-padding: 15; -fx-background-color: #2c3e50;">
+            <Label text="⏱ Simulare Carusel cu Timere"
+                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Label text="Demonstrație planificare cu java.util.Timer"
+                   style="-fx-font-size: 12px; -fx-text-fill: #ecf0f1; -fx-padding: 5 0 0 0;"/>
+        </VBox>
     </top>
-
+    
     <center>
-        <VBox spacing="10" alignment="CENTER">
+        <VBox spacing="15" alignment="CENTER" style="-fx-padding: 20;">
+            
             <!-- Container pentru artificii și carusel -->
-            <StackPane>
-                <!-- Carusel 250x250 -->
+            <StackPane style="-fx-background-color: white; -fx-padding: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2);">
+                <!-- Carusel 280x280 -->
                 <ImageView fx:id="caruselView"
-                           fitWidth="250" fitHeight="250"
+                           fitWidth="280" fitHeight="280"
                            preserveRatio="true"/>
                 
-                <!-- Fireworks 300x300 - mutat în sus cu 100 pixeli -->
+                <!-- Fireworks 350x350 - poziționat deasupra -->
                 <ImageView fx:id="fireworksView"
-                           fitWidth="500" fitHeight="300"
+                           fitWidth="350" fitHeight="350"
                            preserveRatio="true"
                            visible="false"
-                           translateY="-100"/>
+                           translateY="-80"/>
             </StackPane>
-
-            <!-- Timer 1 -->
-            <TitledPane text="Timer 1 - la interval fix" expanded="true">
-                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 10;">
-                    <Button text="Start/Stop Timer 1" onAction="#startTimer1" style="-fx-font-size: 14px;"/>
-                    <Label fx:id="labelTimer1" text="În așteptare..." style="-fx-font-size: 14px;"/>
+            
+            <!-- Timer 1 - Interval Fix -->
+            <TitledPane text="🎠 Timer 1 - Interval Fix (scheduleAtFixedRate)" 
+                        expanded="true"
+                        style="-fx-font-weight: bold;">
+                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 15;">
+                    <Button text="▶️ Start/Stop" 
+                            onAction="#startTimer1" 
+                            style="-fx-font-size: 14px; -fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;"/>
+                    <Label fx:id="labelTimer1" 
+                           text="În așteptare..." 
+                           style="-fx-font-size: 14px; -fx-text-fill: #2c3e50;"/>
                 </HBox>
             </TitledPane>
-
-            <!-- Timer 2 -->
-            <TitledPane text="Timer 2 - mesaj după 5 secunde" expanded="true">
-                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 10;">
-                    <Button text="Start/Stop Timer 2" onAction="#startTimer2" style="-fx-font-size: 14px;"/>
-                    <Label fx:id="labelTimer2" text="În așteptare..." style="-fx-font-size: 14px;"/>
+            
+            <!-- Timer 2 - Cu Perioadă -->
+            <TitledPane text="🎆 Timer 2 - Oprire După 5 Secunde (schedule + scheduleAtFixedRate)" 
+                        expanded="true"
+                        style="-fx-font-weight: bold;">
+                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 15;">
+                    <Button text="▶️ Start/Stop" 
+                            onAction="#startTimer2" 
+                            style="-fx-font-size: 14px; -fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;"/>
+                    <Label fx:id="labelTimer2" 
+                           text="În așteptare..." 
+                           style="-fx-font-size: 14px; -fx-text-fill: #2c3e50;"/>
                 </HBox>
             </TitledPane>
-
-            <!-- Timer 3 -->
-            <TitledPane text="Timer 3 - la ora dorită" expanded="true">
-                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 10;">
-                    <TextField fx:id="timeInput" promptText="HH:mm" style="-fx-font-size: 14px;"/>
-                    <Button text="Setează timer" onAction="#startTimer3" style="-fx-font-size: 14px;"/>
-                    <Label fx:id="labelTimer3" text="În așteptare..." style="-fx-font-size: 14px;"/>
+            
+            <!-- Timer 3 - La Oră Specifică -->
+            <TitledPane text="🌙 Timer 3 - La Oră Specifică (schedule cu Date)" 
+                        expanded="true"
+                        style="-fx-font-weight: bold;">
+                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 15;">
+                    <TextField fx:id="timeInput" 
+                               promptText="HH:mm (ex: 18:30)" 
+                               prefWidth="150"
+                               style="-fx-font-size: 14px;"/>
+                    <Button text="⏰ Setează Timer" 
+                            onAction="#startTimer3" 
+                            style="-fx-font-size: 14px; -fx-background-color: #9b59b6; -fx-text-fill: white; -fx-cursor: hand;"/>
+                    <Label fx:id="labelTimer3" 
+                           text="În așteptare..." 
+                           style="-fx-font-size: 14px; -fx-text-fill: #2c3e50;"/>
                 </HBox>
             </TitledPane>
-
-            <!-- Timer 4 -->
-            <TitledPane text="Timer 4 - perioadă 3s după 2s delay" expanded="true">
-                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 10;">
-                    <Button text="Start/Stop Timer 4" onAction="#startTimer4" style="-fx-font-size: 14px;"/>
-                    <Label fx:id="labelTimer4" text="În așteptare..." style="-fx-font-size: 14px;"/>
-                </HBox>
-            </TitledPane>
-
+            
         </VBox>
     </center>
+    
+    <!-- Footer -->
+    <bottom>
+        <HBox alignment="CENTER" style="-fx-padding: 10; -fx-background-color: #ecf0f1;">
+            <Label text="💡 Trei tipuri de timere: interval fix | cu oprire programată | la moment specific"
+                   style="-fx-font-size: 11px; -fx-text-fill: #7f8c8d;"/>
+        </HBox>
+    </bottom>
+    
 </BorderPane>

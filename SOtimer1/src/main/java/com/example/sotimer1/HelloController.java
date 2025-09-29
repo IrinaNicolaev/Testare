@@ -22,8 +22,6 @@ public class HelloController {
     private Label labelTimer2;
     @FXML
     private Label labelTimer3;
-    @FXML
-    private Label labelTimer4;
 
     @FXML
     private TextField timeInput;
@@ -34,17 +32,22 @@ public class HelloController {
     @FXML
     private ImageView fireworksView;
 
-
     private Timer timer1;
     private Timer timer2;
     private Timer timer3;
-    private Timer timer4;
+    private Timer stopTimer2;
+    private Timer hideTimer2;
 
-    // ===== Timer 1 – Carusel GIF =====
+    private int elapsedSeconds = 0; // Counter real pentru Timer 1
+
+    // ===== Timer 1 – Carusel cu interval fix (1 secundă) =====
     @FXML
     public void startTimer1() {
         if (timer1 == null) {
-            // Pornim GIF
+            // Resetare counter
+            elapsedSeconds = 0;
+            
+            // Pornire GIF
             Image gif = new Image(getClass().getResourceAsStream("carusel.gif"));
             caruselView.setImage(gif);
 
@@ -52,105 +55,120 @@ public class HelloController {
             timer1.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
+                    elapsedSeconds++;
                     Platform.runLater(() ->
-                            labelTimer1.setText("Timp de funcționare " + (System.currentTimeMillis() / 1000) + "s"));
+                            labelTimer1.setText("🎠 Timp de funcționare: " + elapsedSeconds + "s"));
                 }
             }, 0, 1000);
+            
+            Platform.runLater(() -> labelTimer1.setText("🎠 Caruselul pornește..."));
+            
         } else {
             // Oprire
             timer1.cancel();
             timer1 = null;
-            Platform.runLater(() -> labelTimer1.setText("S-a oprit"));
+            
+            Platform.runLater(() -> 
+                    labelTimer1.setText("🛑 Oprit după " + elapsedSeconds + " secunde"));
 
             Image staticFrame = new Image(getClass().getResourceAsStream("static.png"));
             caruselView.setImage(staticFrame);
         }
     }
 
-// ===== Timer 2 – Carusel GIF =====
-@FXML
-public void startTimer2() {
-    if (timer2 == null) {
-        // Ascunde artificiile la început
-        fireworksView.setVisible(false);
-        
-        timer2 = new Timer();
-        final int[] counter = {0};
-
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                Platform.runLater(() -> {
-                    counter[0] = (counter[0] % 3) + 1;
-                    labelTimer2.setText("Runda a început" + ".".repeat(counter[0]));
-                });
-            }
-        };
-
-        timer2.scheduleAtFixedRate(task, 0, 1000);
-
-        // Timer separat pentru oprire după 5 secunde și afișare artificii
-        Timer stopTimer = new Timer();
-        stopTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                // Oprește timer2
-                if (timer2 != null) {
-                    timer2.cancel();
-                    timer2 = null;
-                }
-                
-                Platform.runLater(() -> {
-                    labelTimer2.setText("5 secunde au trecut!");
-                    
-                    try {
-                        // Încearcă să încarci GIF-ul artificiilor
-                        Image fireworksGif = new Image(getClass().getResourceAsStream("Fireworks.gif"));
-                        
-                        if (fireworksGif.isError()) {
-                            System.err.println("Eroare la încărcarea fireworks.gif");
-                            labelTimer2.setText("Eroare: fireworks.gif nu a fost găsit!");
-                        } else {
-                            // Setează și afișează artificiile
-                            fireworksView.setImage(fireworksGif);
-                            fireworksView.setVisible(true);
-                            
-                            // Debug - confirmă că artificiile sunt afișate
-                            System.out.println("Artificiile sunt afișate!");
-                            
-                            // Ascunde artificiile după 3 secunde
-                            Timer hideTimer = new Timer();
-                            hideTimer.schedule(new TimerTask() {
-                                @Override
-                                public void run() {
-                                    Platform.runLater(() -> {
-                                        fireworksView.setVisible(false);
-                                        System.out.println("Artificiile sunt ascunse!");
-                                    });
-                                }
-                            }, 3000);
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Excepție la încărcarea artificiilor: " + e.getMessage());
-                        labelTimer2.setText("Eroare la încărcarea artificiilor!");
-                    }
-                });
-            }
-        }, 5000);
-
-    } else {
-        // Oprire manuală
-        timer2.cancel();
-        timer2 = null;
-        Platform.runLater(() -> {
-            labelTimer2.setText("Timer 2 oprit");
+    // ===== Timer 2 – Mesaj după 5 secunde cu artificii =====
+    @FXML
+    public void startTimer2() {
+        if (timer2 == null) {
+            // Ascunde artificiile la început
             fireworksView.setVisible(false);
-        });
+            
+            timer2 = new Timer();
+            final int[] counter = {0};
+
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> {
+                        counter[0] = (counter[0] % 3) + 1;
+                        labelTimer2.setText("⏳ Runda a început" + ".".repeat(counter[0]));
+                    });
+                }
+            };
+
+            timer2.scheduleAtFixedRate(task, 0, 1000);
+
+            // Timer separat pentru oprire după 5 secunde și afișare artificii
+            stopTimer2 = new Timer();
+            stopTimer2.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    // Oprește timer2
+                    if (timer2 != null) {
+                        timer2.cancel();
+                        timer2 = null;
+                    }
+                    
+                    Platform.runLater(() -> {
+                        labelTimer2.setText("🎉 5 secunde au trecut!");
+                        
+                        try {
+                            // Încarcă GIF-ul artificiilor
+                            Image fireworksGif = new Image(getClass().getResourceAsStream("Fireworks.gif"));
+                            
+                            if (fireworksGif.isError()) {
+                                System.err.println("Eroare la încărcarea Fireworks.gif");
+                                labelTimer2.setText("❌ Eroare: Fireworks.gif nu a fost găsit!");
+                            } else {
+                                // Setează și afișează artificiile
+                                fireworksView.setImage(fireworksGif);
+                                fireworksView.setVisible(true);
+                                
+                                System.out.println("✅ Artificiile sunt afișate!");
+                                
+                                // Ascunde artificiile după 3 secunde
+                                hideTimer2 = new Timer();
+                                hideTimer2.schedule(new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        Platform.runLater(() -> {
+                                            fireworksView.setVisible(false);
+                                            System.out.println("✅ Artificiile sunt ascunse!");
+                                        });
+                                    }
+                                }, 3000);
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Excepție la încărcarea artificiilor: " + e.getMessage());
+                            labelTimer2.setText("❌ Eroare la încărcarea artificiilor!");
+                        }
+                    });
+                }
+            }, 5000);
+            
+            Platform.runLater(() -> labelTimer2.setText("⏳ Numărătoare inversă: 5s..."));
+
+        } else {
+            // Oprire manuală
+            timer2.cancel();
+            timer2 = null;
+            
+            if (stopTimer2 != null) {
+                stopTimer2.cancel();
+                stopTimer2 = null;
+            }
+            
+            if (hideTimer2 != null) {
+                hideTimer2.cancel();
+                hideTimer2 = null;
+            }
+            
+            Platform.runLater(() -> {
+                labelTimer2.setText("🛑 Timer 2 oprit manual");
+                fireworksView.setVisible(false);
+            });
+        }
     }
-}
-
-
-
 
     // ===== Timer 3 – La o oră specificată =====
     @FXML
@@ -158,7 +176,7 @@ public void startTimer2() {
         String input = timeInput.getText().trim();
 
         if (input.isEmpty()) {
-            labelTimer3.setText("Introdu o oră (HH:mm, ex: 18:30)");
+            labelTimer3.setText("⚠️ Introdu o oră (HH:mm, ex: 18:30)");
             return;
         }
 
@@ -171,21 +189,25 @@ public void startTimer2() {
                     @Override
                     public void run() {
                         Platform.runLater(() -> {
-                            labelTimer3.setText("E seară deja " + input + "!");
+                            labelTimer3.setText("🌙 E seară deja " + input + "!");
                             Image nightGif = new Image(getClass().getResourceAsStream("Night.gif"));
                             caruselView.setImage(nightGif);
                             caruselView.setStyle("-fx-background-color: black;");
+                            
+                            System.out.println("✅ Timer 3 declanșat la ora " + input);
                         });
                     }
                 }, delay);
 
-                labelTimer3.setText("Se va însera la ora " + input);
+                labelTimer3.setText("🕐 Se va însera la ora " + input);
+                System.out.println("✅ Timer 3 setat pentru ora " + input + " (delay: " + delay + "ms)");
 
             } else {
                 timer3.cancel();
                 timer3 = null;
+                
                 Platform.runLater(() -> {
-                    labelTimer3.setText("Timer oprit");
+                    labelTimer3.setText("🛑 Timer oprit");
                     Image staticImg = new Image(getClass().getResourceAsStream("static.png"));
                     caruselView.setImage(staticImg);
                     caruselView.setStyle("");
@@ -193,10 +215,14 @@ public void startTimer2() {
             }
 
         } catch (Exception e) {
-            labelTimer3.setText("Aceea nu este o oră! Folosește HH:mm");
+            labelTimer3.setText("❌ Aceea nu este o oră! Folosește HH:mm");
+            System.err.println("Eroare la parsarea orei: " + e.getMessage());
         }
     }
 
+    /**
+     * Calculează delay-ul în milisecunde până la ora specificată
+     */
     private long getDelayUntil(String hhmm) throws Exception {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         LocalTime targetTime = LocalTime.parse(hhmm, formatter);
@@ -207,6 +233,7 @@ public void startTimer2() {
                 .withSecond(0)
                 .withNano(0);
 
+        // Dacă ora a trecut azi, programează pentru mâine
         if (targetDateTime.isBefore(now)) {
             targetDateTime = targetDateTime.plusDays(1);
         }
@@ -214,29 +241,31 @@ public void startTimer2() {
         return Duration.between(now, targetDateTime).toMillis();
     }
 
-    // ===== Timer 4 – Joules consumați =====
-    @FXML
-    public void startTimer4() {
-        if (timer4 == null) {
-            timer4 = new Timer();
-            timer4.scheduleAtFixedRate(new TimerTask() {
-                @Override
-                public void run() {
-                    Platform.runLater(() ->
-                            labelTimer4.setText("Joules (J) consumați : " + (System.currentTimeMillis() / 1000) + "s"));
-                }
-            }, 2000, 3000);
-        } else {
-            timer4.cancel();
-            timer4 = null;
-            Platform.runLater(() -> labelTimer4.setText("A fost inutil?"));
-        }
-    }
-
+    /**
+     * Cleanup la închiderea aplicației
+     */
     public void shutdown() {
-        if (timer1 != null) timer1.cancel();
-        if (timer2 != null) timer2.cancel();
-        if (timer3 != null) timer3.cancel();
-        if (timer4 != null) timer4.cancel();
+        System.out.println("🔴 Oprire aplicație - curățare timere...");
+        
+        if (timer1 != null) {
+            timer1.cancel();
+            System.out.println("✅ Timer 1 oprit");
+        }
+        if (timer2 != null) {
+            timer2.cancel();
+            System.out.println("✅ Timer 2 oprit");
+        }
+        if (timer3 != null) {
+            timer3.cancel();
+            System.out.println("✅ Timer 3 oprit");
+        }
+        if (stopTimer2 != null) {
+            stopTimer2.cancel();
+            System.out.println("✅ StopTimer2 oprit");
+        }
+        if (hideTimer2 != null) {
+            hideTimer2.cancel();
+            System.out.println("✅ HideTimer2 oprit");
+        }
     }
 }
