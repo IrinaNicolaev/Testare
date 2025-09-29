@@ -1,37 +1,52 @@
-import java.awt.Toolkit;
-import java.util.TimerTask;
+// Файл: TimerTasks.java (или там, где у тебя эти классы)
 
-/**
- * Класс, который воспроизводит звуковой сигнал.
- * Он наследует возможности класса TimerTask.
- */
-class SoundPlayer extends TimerTask {
+import java.awt.Toolkit;
+import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
+
+// Класс для звука и обновления статуса
+class SoundPlayer implements Runnable {
+    private JLabel statusLabel;
+
+    public SoundPlayer(JLabel label) {
+        this.statusLabel = label;
+    }
+
     @Override
     public void run() {
-        // Заставляет систему издать короткий звуковой сигнал
-        Toolkit.getDefaultToolkit().beep();
-        System.out.println("Sound played");
+        for (int i = 1; i <= 5; i++) {
+            final int count = i;
+            Toolkit.getDefaultToolkit().beep();
+            System.out.println("Thread 1: Sound played, count: " + count);
+
+            // !!! БЕЗОПАСНОЕ ОБНОВЛЕНИЕ GUI !!!
+            SwingUtilities.invokeLater(() -> {
+                statusLabel.setText("Thread 1 (Sound): Playing... (" + count + "/5)");
+            });
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // ...
+            }
+        }
+        SwingUtilities.invokeLater(() -> statusLabel.setText("Thread 1 (Sound): FINISHED."));
     }
 }
 
-/**
- * Класс, который выводит текстовое сообщение.
- * Он также наследует возможности класса TimerTask.
- */
-class Message extends TimerTask {
-    String msg;
+// Класс для сообщения и обновления статуса
+class Message implements Runnable {
+    private String msg;
+    private JLabel statusLabel;
 
-    /**
-     * Конструктор для класса Message.
-     * @param msg Текст сообщения, который нужно вывести.
-     */
-    public Message(String msg) {
+    public Message(String msg, JLabel label) {
         this.msg = msg;
+        this.statusLabel = label;
     }
 
     @Override
     public void run() {
-        // Выводит сохранённое сообщение на консоль
-        System.out.println(msg);
+        System.out.println("Thread 2: " + msg);
+        SwingUtilities.invokeLater(() -> statusLabel.setText("Thread 2 (Message): " + msg));
     }
 }

@@ -1,42 +1,52 @@
 // Файл: TimerApp.java
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
-
-// Запустит задачи, определённые в другом файле.
 public class TimerApp {
     public static void main(String[] args) {
-        // Задача 1: Запуск с указанным периодом (каждые 2 секунды).
-        // Использует класс SoundPlayer из первого файла.
-        SoundPlayer soundPlayer = new SoundPlayer();
-        Timer soundTimer = new Timer();
-        soundTimer.scheduleAtFixedRate(soundPlayer, 0, 2000);
+        System.out.println("Main Thread started. Starting 3 new threads.");
 
-        // Задача 2: Реагировать на определённый интервал времени (через 5 секунд).
-        // Отменяет первый таймер.
-        Timer messageTimer = new Timer();
-        messageTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                System.out.println("5 seconds have passed. Cancelling the sound timer.");
-                soundTimer.cancel();
-            }
-        }, 5000);
+        // 1. Создаем первый поток для звука
+        Thread soundThread = new Thread(new SoundPlayer());
 
-        // Задача 3: Реагировать на определённое время (в 18:24).
-        // Использует класс Message из первого файла.
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 18);
-        calendar.set(Calendar.MINUTE, 24);
-        calendar.set(Calendar.SECOND, 0);
-        Date date = calendar.getTime();
+        // 2. Создаем второй поток для сообщения
+        Thread messageThread = new Thread(new Message("This is Thread 2's scheduled message!"));
+        // 3. Создаем третий, анонимный поток для демонстрации третьего потока
+      
+        Thread thirdThread = new Thread(() -> 
+            System.out.println("Thread 3 (Anonymous): I am the third thread, running in parallel.")
+        );
 
-        Message message = new Message("Salut, Salut, Salut!!!");
-        Timer clock = new Timer();
-        clock.schedule(message, date);
+        // Запускаем все три потока
+        soundThread.start();
+        messageThread.start();
+        thirdThread.start();
 
-        System.out.println("Application started.");
+        System.out.println("All threads started. Main thread finished.");
+        // Задачи будут выполняться параллельно
+    }
+    
+    // SoundPlayer class implementing Runnable
+    static class SoundPlayer implements Runnable {
+        public SoundPlayer() {
+            // No-argument constructor
+        }
+    
+        @Override
+        public void run() {
+            System.out.println("Thread 1 (SoundPlayer): Playing sound (simulated).");
+        }
+    }
+}
+
+// Message class implementing Runnable
+class Message implements Runnable {
+    private String message;
+
+    public Message(String message) {
+        this.message = message;
+    }
+
+    @Override
+    public void run() {
+        System.out.println(message);
     }
 }
