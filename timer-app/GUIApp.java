@@ -1,80 +1,102 @@
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.io.File;
-import javax.sound.sampled.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.*;
 
 public class GUIApp {
 
-    static final JLabel statusLabel1 = new JLabel("Status 1: Idle");
-    static final JLabel statusLabel2 = new JLabel("Status 2: Idle");
-    static final JLabel statusLabel3 = new JLabel("Status 3: Idle");
+    private static JLabel sumLabel = new JLabel("Sum: ?");
+    private static AtomicInteger result1 = new AtomicInteger(0);
+    private static AtomicInteger result2 = new AtomicInteger(0);
+    private static AtomicInteger result3 = new AtomicInteger(0);
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Thread and Timer Status");
+        JFrame frame = new JFrame("User Input Sum Beep");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 200);
+        frame.setSize(400, 250);
 
-        JPanel panel = new JPanel(new GridLayout(5, 1));
-        JButton startButton = new JButton("Start All Threads");
+        JPanel panel = new JPanel(new GridLayout(6, 2, 5, 5));
 
-        panel.add(startButton);
-        panel.add(statusLabel1);
-        panel.add(statusLabel2);
-        panel.add(statusLabel3);
+        JTextField input1 = new JTextField();
+        JTextField input2 = new JTextField();
+        JTextField input3 = new JTextField();
 
-        startButton.addActionListener((ActionEvent e) -> {
-            startButton.setEnabled(false);
+        JButton calculateButton = new JButton("Calculate Sum");
+        JButton resetButton = new JButton("Reset");
 
-            // Поток для воспроизведения звука
-            Thread soundThread = new Thread(() -> playSound("sound.wav"));
+        panel.add(new JLabel("Enter number for Thread 1:"));
+        panel.add(input1);
+        panel.add(new JLabel("Enter number for Thread 2:"));
+        panel.add(input2);
+        panel.add(new JLabel("Enter number for Thread 3:"));
+        panel.add(input3);
 
-            // Поток Message
-            Thread messageThread = new Thread(new Message("Message received!"));
+        panel.add(calculateButton);
+        panel.add(resetButton);
 
-            // Третий поток (анонимный)
-            Thread thirdThread = new Thread(() -> {
-                SwingUtilities.invokeLater(() -> statusLabel3.setText("Thread 3: Working..."));
-                try { Thread.sleep(3000); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-                SwingUtilities.invokeLater(() -> statusLabel3.setText("Thread 3: Finished."));
-            });
+        panel.add(sumLabel);
+        panel.add(new JLabel()); // пустая ячейка
 
-            soundThread.start();
-            messageThread.start();
-            thirdThread.start();
+        // Кнопка расчёта суммы
+        calculateButton.addActionListener(e -> {
+            calculateButton.setEnabled(false);
+            int num1 = parseInput(input1.getText());
+            int num2 = parseInput(input2.getText());
+            int num3 = parseInput(input3.getText());
+
+            // Поток 1
+            new Thread(() -> {
+                try { Thread.sleep(1000); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
+                result1.set(num1);
+                checkAndShowSum();
+            }).start();
+
+            // Поток 2
+            new Thread(() -> {
+                try { Thread.sleep(1500); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
+                result2.set(num2);
+                checkAndShowSum();
+            }).start();
+
+            // Поток 3
+            new Thread(() -> {
+                try { Thread.sleep(2000); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
+                result3.set(num3);
+                checkAndShowSum();
+            }).start();
+        });
+
+        // Кнопка сброса
+        resetButton.addActionListener(e -> {
+            input1.setText("");
+            input2.setText("");
+            input3.setText("");
+            sumLabel.setText("Sum: ?");
+            result1.set(0);
+            result2.set(0);
+            result3.set(0);
+            calculateButton.setEnabled(true);
         });
 
         frame.add(panel);
         frame.setVisible(true);
     }
 
-    // Метод для воспроизведения звука
-    private static void playSound(String fileName) {
-        SwingUtilities.invokeLater(() -> statusLabel1.setText("Thread 1: Playing sound..."));
+    private static int parseInput(String text) {
         try {
-            File soundFile = new File(fileName); // укажите путь к вашему .wav файлу
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.start();
-
-            // Ждем, пока звук не закончится
-            Thread.sleep(clip.getMicrosecondLength() / 1000);
-
-        } catch (Exception ex) {
-            SwingUtilities.invokeLater(() -> statusLabel1.setText("Thread 1: Error: " + ex.getMessage()));
+            return Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+            return 0;
         }
-        SwingUtilities.invokeLater(() -> statusLabel1.setText("Thread 1: Finished."));
     }
-}
 
-// Класс Message для второго потока
-class Message implements Runnable {
-    private final String message;
-    public Message(String message) { this.message = message; }
-    @Override
-    public void run() {
-        System.out.println("Message thread: " + message);
-        SwingUtilities.invokeLater(() -> GUIApp.statusLabel2.setText("Thread 2: " + message));
+    private static void checkAndShowSum() {
+        SwingUtilities.invokeLater(() -> {
+            int sum = result1.get() + result2.get() + result3.get();
+            sumLabel.setText("Sum: " + sum);
+            if (sum == 9) {
+                Toolkit.getDefaultToolkit().beep();
+                System.out.println("Beep! Sum = 9");
+            }
+        });
     }
 }
