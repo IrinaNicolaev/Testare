@@ -4,7 +4,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
-
+//zzz
 /**
  * Класс, который воспроизводит звук.
  */
@@ -35,8 +35,8 @@ class Message extends TimerTask {
 public class MyProgram {
 
     public static void main(String[] args) {
-        // Создание и запуск таймеров
-        
+        System.out.println("Start");
+
         // Таймер для звука (каждые 2 секунды)
         Timer soundTimer = new Timer();
         TimerTask soundPlayer = new SoundPlayer();
@@ -62,7 +62,5 @@ public class MyProgram {
         Timer clock = new Timer();
         TimerTask message = new Message("Salut, Salut, Salut!!!");
         clock.schedule(message, date);
-
-        System.out.println("Start");
     }
 }

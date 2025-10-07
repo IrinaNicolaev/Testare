@@ -2,19 +2,22 @@ import java.awt.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.*;
 
-public class GUIApp {
+public class GUIApp{
 
     private static JLabel sumLabel = new JLabel("Sum: ?");
     private static AtomicInteger result1 = new AtomicInteger(0);
     private static AtomicInteger result2 = new AtomicInteger(0);
     private static AtomicInteger result3 = new AtomicInteger(0);
 
+    //Создание окна
     public static void main(String[] args) {
         JFrame frame = new JFrame("User Input Sum Beep");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(400, 250);
-
+//Добавление панели и элементов
         JPanel panel = new JPanel(new GridLayout(6, 2, 5, 5));
+//Поля ввода и кнопки
+
 
         JTextField input1 = new JTextField();
         JTextField input2 = new JTextField();
@@ -43,27 +46,22 @@ public class GUIApp {
             int num2 = parseInput(input2.getText());
             int num3 = parseInput(input3.getText());
 
-            // Поток 1
-            new Thread(() -> {
-                try { Thread.sleep(1000); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-                result1.set(num1);
-                checkAndShowSum();
-            }).start();
+            result1.set(num1);
+            result2.set(num2);
+            result3.set(num3);
 
-            // Поток 2
-            new Thread(() -> {
-                try { Thread.sleep(1500); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-                result2.set(num2);
-                checkAndShowSum();
-            }).start();
+            int sum = result1.get() + result2.get() + result3.get();
+            sumLabel.setText("Sum: " + sum);
 
-            // Поток 3
-            new Thread(() -> {
-                try { Thread.sleep(2000); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); }
-                result3.set(num3);
-                checkAndShowSum();
-            }).start();
+
+
+
+// Системный beep на любой результат
+Toolkit.getDefaultToolkit().beep();
+System.out.println("Beep! Sum = " + sum);
         });
+
+        
 
         // Кнопка сброса
         resetButton.addActionListener(e -> {
@@ -75,6 +73,10 @@ public class GUIApp {
             result2.set(0);
             result3.set(0);
             calculateButton.setEnabled(true);
+                  // Системный beep при сбросе
+            Toolkit.getDefaultToolkit().beep();
+            System.out.println("Beep! Reset pressed");
+
         });
 
         frame.add(panel);
@@ -87,16 +89,5 @@ public class GUIApp {
         } catch (NumberFormatException e) {
             return 0;
         }
-    }
-
-    private static void checkAndShowSum() {
-        SwingUtilities.invokeLater(() -> {
-            int sum = result1.get() + result2.get() + result3.get();
-            sumLabel.setText("Sum: " + sum);
-            if (sum == 9) {
-                Toolkit.getDefaultToolkit().beep();
-                System.out.println("Beep! Sum = 9");
-            }
-        });
     }
 }

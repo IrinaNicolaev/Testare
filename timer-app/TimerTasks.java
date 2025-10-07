@@ -1,4 +1,4 @@
-// Файл: TimerTasks.java (или там, где у тебя эти классы)
+// Файл: TimerTasks.java 
 
 import java.awt.Toolkit;
 import javax.swing.JLabel;
