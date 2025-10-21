@@ -3,11 +3,11 @@ import java.awt.Toolkit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Timer;
-import java.util.TimerTask;
+import java.util.TimerTask; 
 //zzz
 /**
  * Класс, который воспроизводит звук.
- */
+/** extends TimerTask - получает доступ ко всем методам и свойствам, описанным в TimerTasks.java. */
 class SoundPlayer extends TimerTask {
     @Override
     public void run() {
