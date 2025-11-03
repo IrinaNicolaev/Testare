@@ -1,4 +1,4 @@
-package com.example.lab1so;
+//package com.example.lab1so;
 
 import java.util.Timer;
 import java.util.TimerTask;
