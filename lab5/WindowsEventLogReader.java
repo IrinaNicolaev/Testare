@@ -1,41 +1,30 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.Scanner;
 
 public class WindowsEventLogReader {
 
-    public static void readEventLog(String logName, int numberOfRecords) {
+    public static void readSystemLog() {
         try {
-            // Construim comanda wevtutil
-            String command = String.format(
-                "wevtutil qe %s /c:%d /f:text /rd:true",
-                logName, numberOfRecords
-            );
+            String command = "wevtutil qe System /f:text /rd:true";
 
-            // Pornim procesul
+
             Process process = Runtime.getRuntime().exec(command);
 
-            // Citim ieșirea standard
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
+            System.out.println("Toate înregistrările din jurnalul SYSTEM");
 
-            // Citim eroarea standard (în caz că există)
-            BufferedReader errorReader = new BufferedReader(
-                    new InputStreamReader(process.getErrorStream()));
-
-            String line;
-
-            System.out.println("=== Ultimele înregistrări din jurnalul " + logName + " ===");
-
-            // Afișăm ieșirea comenzii
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+            // Citire output
+            Scanner sc = new Scanner(process.getInputStream());
+            while (sc.hasNextLine()) {
+                System.out.println(sc.nextLine());
             }
+            sc.close();
 
-            // Afișăm eventualele erori
-            while ((line = errorReader.readLine()) != null) {
-                System.err.println(line);
+            // Citire eventuale erori
+            Scanner err = new Scanner(process.getErrorStream());
+            while (err.hasNextLine()) {
+                System.err.println(err.nextLine());
             }
+            err.close();
 
             process.waitFor();
 
@@ -45,10 +34,6 @@ public class WindowsEventLogReader {
     }
 
     public static void main(String[] args) {
-        // Citiți 20 de intrări din jurnalul System
-        readEventLog("System", 20);
-
-        // Exemplu — citiți 10 intrări din Application
-        // readEventLog("Application", 10);
+        readSystemLog();
     }
 }
