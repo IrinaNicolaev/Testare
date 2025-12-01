@@ -1,0 +1,342 @@
+/* ==================================== */
+/* 1. Глобальные стили и переменные */
+/* ==================================== */
+
+:root {
+  --primary-color: #3f51b5; /* Индиго/Насыщенный синий для акцентов */
+  --secondary-color: #fdd835; /* Желтый для дополнительного акцента */
+  --background-light: #fcfdfe; /* Сделаем фон почти белым */
+  --background-grey: #f4f6f8; /* Легкий серый для фоновых элементов */
+  --text-dark: #333;
+  --text-light: #fff;
+  --shadow-color: rgba(0, 0, 0, 0.05); /* Мягкий цвет тени */
+  --font-heading: "Montserrat", sans-serif;
+  --font-body: "Raleway", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  line-height: 1.6;
+  color: var(--text-dark);
+  background-color: var(
+    --background-grey
+  ); /* Фон страницы теперь светло-серый */
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  color: var(--primary-color);
+  margin-bottom: 0.5em;
+  font-weight: 700;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+a:hover {
+  color: var(--secondary-color);
+}
+
+/* ==================================== */
+/* 2. Макет и общие элементы (Современные Тени) */
+/* ==================================== */
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.section {
+  background: var(--background-light); /* Белый фон секции */
+  padding: 40px;
+  margin-bottom: 30px;
+  border-radius: 12px;
+  /* ОБНОВЛЕНИЕ: Мягкие, многослойные тени */
+  box-shadow: 0 1px 3px var(--shadow-color),
+    0 10px 15px -5px var(--shadow-color);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.section:hover {
+  /* Добавим легкий эффект при наведении */
+  box-shadow: 0 1px 5px var(--shadow-color), 0 15px 25px -5px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* ==================================== */
+/* 3. Шапка (Hero Section) */
+/* ==================================== */
+
+.hero {
+  /* ОБНОВЛЕНИЕ: Легкий градиент на фоне */
+  background: linear-gradient(135deg, var(--primary-color) 0%, #4a5ee1 100%);
+  color: var(--text-light);
+  text-align: center;
+  padding: 80px 20px;
+  margin-bottom: 0;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.hero h1 {
+  font-size: 3em;
+  margin-bottom: 0.2em;
+  color: var(--text-light);
+  letter-spacing: 1.5px;
+  font-weight: 800; /* Сделаем заголовок более жирным */
+}
+
+.hero .subtitle {
+  font-size: 1.2em;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ==================================== */
+/* 4. Секция "Обо мне" (С ФИКСОМ КРУГА) */
+/* ==================================== */
+
+#about {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-image-container {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-top: -100px; /* Сдвиг изображения вверх, чтобы оно выходило из hero */
+  margin-bottom: 20px;
+  border: 5px solid var(--text-light); /* Белая рамка */
+  box-shadow: 0 0 0 5px var(--secondary-color); /* Желтый внешний круг */
+
+  /* ФИКС: Для ровного центрирования изображения */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ключевое свойство для ровного заполнения круга */
+}
+
+.about-text {
+  max-width: 700px;
+  margin: 0 auto 20px;
+  font-size: 1.1em;
+  font-weight: 500;
+  color: #555;
+}
+
+.contact-info-grid {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 15px;
+}
+
+.contact-info-grid strong {
+  font-weight: 600;
+}
+
+/* ==================================== */
+/* 5. Навыки (Современные Тэги) */
+/* ==================================== */
+
+.skills-container {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.skill-group {
+  flex-basis: 45%;
+  min-width: 250px;
+  padding: 20px;
+  background: var(--background-grey);
+  border-radius: 8px;
+  border-left: 5px solid var(--primary-color);
+}
+
+.skill-group h3 {
+  font-size: 1.4em;
+  color: #444;
+  margin-bottom: 15px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tags span {
+  /* ОБНОВЛЕНИЕ: Светлый фон для тэгов с акцентным текстом */
+  background: var(--background-grey);
+  color: var(--primary-color);
+  padding: 8px 15px;
+  border-radius: 6px; /* Мягкое скругление */
+  font-size: 0.9em;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #ddd;
+  cursor: default;
+}
+
+.tags span:hover {
+  background: var(--primary-color);
+  color: var(--text-light);
+  border-color: var(--primary-color);
+  transform: translateY(-1px); /* Легкий подъем при наведении */
+}
+
+/* ==================================== */
+/* 6. Образование (Чистый Таймлайн) */
+/* ==================================== */
+
+.timeline-item {
+  /* ОБНОВЛЕНИЕ: Основная линия сделаем первичным цветом */
+  border-left: 3px solid var(--primary-color);
+  padding-left: 25px; /* Увеличим отступ */
+  position: relative;
+  margin-bottom: 35px;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 5px;
+  width: 16px;
+  height: 16px;
+  background: var(
+    --secondary-color
+  ); /* ОБНОВЛЕНИЕ: Маркер как основной акцент */
+  border-radius: 50%;
+  border: 3px solid var(--text-light); /* Белая обводка */
+}
+
+.timeline-date {
+  display: block;
+  color: #777;
+  font-size: 0.9em;
+  margin-bottom: 5px;
+}
+
+.institution {
+  font-style: italic;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.subjects-list {
+  margin-left: 20px;
+  list-style: disc;
+  color: #666;
+}
+
+/* ==================================== */
+/* 7. Контакты */
+/* ==================================== */
+
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.contact-link {
+  display: block;
+  padding: 12px;
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  transition: background 0.3s, color 0.3s;
+}
+
+.contact-link:hover {
+  background: var(--primary-color);
+  color: var(--text-light);
+}
+
+.location {
+  text-align: center;
+  color: #777;
+}
+
+/* ==================================== */
+/* 8. Подвал */
+/* ==================================== */
+
+footer {
+  text-align: center;
+  padding: 20px;
+  background: #2c3e50;
+  color: #ccc;
+  font-size: 0.9em;
+  border-top: 5px solid var(--secondary-color);
+}
+
+/* ==================================== */
+/* 9. Медиа-запросы (Адаптивность) */
+/* ==================================== */
+
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.5em;
+  }
+
+  .hero {
+    padding: 50px 20px;
+  }
+
+  .skills-container {
+    flex-direction: column;
+  }
+
+  .skill-group {
+    flex-basis: 100%;
+    min-width: unset;
+  }
+
+  .contact-info-grid {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 25px 15px;
+  }
+
+  .profile-image-container {
+    width: 120px;
+    height: 120px;
+    margin-top: -80px;
+  }
+}

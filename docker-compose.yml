@@ -1,0 +1,29 @@
+services:
+  # 1. КОНТЕЙНЕР ДЛЯ HTML (ОСНОВНОЙ ВЕБ-САЙТ)
+  web-app:
+    build:
+      context: ./html
+    container_name: html_container
+    ports:
+      - "8080:80"
+    depends_on:
+      - css-server
+      - images-server
+
+  # 2. КОНТЕЙНЕР ДЛЯ CSS
+  css-server:
+    build:
+      context: ./css
+    container_name: css_container
+    ports:
+      # CSS доступен через http://localhost:8081/style.css
+      - "8081:80"
+
+  # 3. КОНТЕЙНЕР ДЛЯ ИЗОБРАЖЕНИЙ
+  images-server:
+    build:
+      context: ./images
+    container_name: images_container
+    ports:
+      # Изображения доступны через http://localhost:8082/images/my_image.jpg
+      - "8082:80"
