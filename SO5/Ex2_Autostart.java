@@ -1,5 +1,6 @@
 import java.io.*;
 import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
 
 /**
@@ -51,66 +52,81 @@ public class Ex2_Autostart {
         int exitCode = executeCommand(cmd, true);
         
         if (exitCode == 0) {
-            System.out.println("✅ SUCCES: Cheie registry creată!");
+            System.out.println("SUCCES: Cheie registry creată.");
         } else {
-            System.err.println("❌ EȘUAT. Cod: " + exitCode);
+            System.err.println("EȘUAT. Cod: " + exitCode);
         }
     }
     
     /**
-     * Implementare LINUX: Creare fișier .service în /etc/systemd/system/
+     * Implementare LINUX complet automată
      */
     private static void addToStartupLinux() throws IOException, InterruptedException {
-        System.out.println("\n=== [EX2 LINUX] Creare fișier systemd service ===");
-        
-        // Conținut service file
-        String content = String.format(
-            "[Unit]%n" +
-            "Description=SO5 Lab Application%n" +
-            "After=network.target%n%n" +
-            "[Service]%n" +
-            "Type=simple%n" +
-            "User=%s%n" +
-            "WorkingDirectory=%s%n" +
-            "ExecStart=/usr/bin/java -cp \"%s\" Ex2_Autostart%n" +
-            "Restart=on-failure%n%n" +
-            "[Install]%n" +
-            "WantedBy=multi-user.target%n",
-            System.getProperty("user.name"),
-            System.getProperty("user.dir"),
-            System.getProperty("user.dir")
-        );
-        
-        // Salvare temporar în directorul curent (pentru demonstrație)
-        String serviceFileName = APP_NAME + ".service";
-        Path tempPath = Paths.get(System.getProperty("user.dir"), serviceFileName);
-        Files.write(tempPath, content.getBytes());
-        tempPath.toFile().setReadable(true);
-        
-        System.out.println("✅ Fișier creat: " + tempPath);
-        System.out.println("\nPentru instalare PERMANENTĂ în /etc/systemd/system/:");
-        System.out.println("  sudo cp " + tempPath + " /etc/systemd/system/");
-        System.out.println("  sudo systemctl daemon-reload");
-        System.out.println("  sudo systemctl enable " + APP_NAME);
+        System.out.println("\n=== [EX2 LINUX] Creare + instalare systemd service ===");
+
+        // verificăm că rulează ca root
+        if (!System.getProperty("user.name").equals("root")) {
+            System.err.println("Această operație necesită root.");
+            System.err.println("Rulează: sudo java -jar aplicatia.jar");
+            return;
+        }
+
+        String realUser = System.getenv("SUDO_USER");
+        if (realUser == null || realUser.isEmpty()) realUser = "root";
+
+        String workingDir = System.getProperty("user.dir");
+        String executablePath = getCurrentPath(); 
+
+        // Detectăm dacă este .jar
+        boolean isJar = executablePath.endsWith(".jar");
+
+        String execStart = isJar
+            ? "/usr/bin/java -jar \"" + executablePath + "\""
+            : "/usr/bin/java -cp \"" + executablePath + "\" Ex2_Autostart";
+
+        String content =
+            "[Unit]\n" +
+            "Description=SO5 Lab Application\n" +
+            "After=network.target\n\n" +
+            "[Service]\n" +
+            "Type=simple\n" +
+            "User=" + realUser + "\n" +
+            "WorkingDirectory=" + workingDir + "\n" +
+            "ExecStart=" + execStart + "\n" +
+            "Restart=on-failure\n\n" +
+            "[Install]\n" +
+            "WantedBy=multi-user.target\n";
+
+        Path servicePath = Paths.get("/etc/systemd/system/" + APP_NAME + ".service");
+
+        Files.write(servicePath, content.getBytes());
+        Files.setPosixFilePermissions(servicePath,
+            PosixFilePermissions.fromString("rw-r--r--"));
+
+        System.out.println("Fișier service creat: " + servicePath);
+
+        executeCommand(Arrays.asList("systemctl", "daemon-reload"), true);
+        executeCommand(Arrays.asList("systemctl", "enable", APP_NAME), true);
+        executeCommand(Arrays.asList("systemctl", "start", APP_NAME), true);
+
+        System.out.println("Serviciul a fost instalat și pornește automat la boot.");
     }
     
     /**
      * Verificare implementare - platformă specifică
      */
-    public static void verifyImplementation(boolean isWindows) throws Exception {
+    public static void verifyImplementation(boolean isWin) throws Exception {
         System.out.println("\n=== VERIFICARE Ex2 - AUTOSTART ===");
         
         List<String> cmd;
-        if (isWindows) {
+        if (isWin) {
             cmd = Arrays.asList(
                 "reg", "query",
                 "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
                 "/v", APP_NAME
             );
         } else {
-            // Verificare fișier .service în directorul curent
-            String servicePath = System.getProperty("user.dir") + "/" + APP_NAME + ".service";
-            cmd = Arrays.asList("ls", "-l", servicePath);
+            cmd = Arrays.asList("systemctl", "status", APP_NAME);
         }
         
         System.out.println("Comandă: " + String.join(" ", cmd));
