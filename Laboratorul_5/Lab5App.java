@@ -1,198 +1,99 @@
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.nio.file.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Scanner;
+import java.util.concurrent.*;
 
-public class Lab5App extends JFrame {
+public class Lab5App {
 
-    // Calea către Edge
-    private static final String EDGE_PATH =
-            "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
-
-    // URL-urile pentru Edge
+    private static final String EDGE = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
     private static final String[] URLS = {
             "https://www.google.com",
             "https://utm.md",
             "https://educatieonline.md"
     };
 
-    // == COMPONENTE GUI ==
-    private JTextArea logArea;
+    // log-ul îl folosim și noi, și colega
+    private static final Path LOG  = Paths.get(
+            "C:/Users/nasty/OneDrive/Desktop/Laboratorul_5/integrity_log.txt");
 
-    // Browser
-    private JButton startBrowserBtn;
-    private JButton stopBrowserBtn;
-    private JLabel browserStatusLabel;
-    private JLabel timerLabel;
-    private Timer browserTimer; // Swing Timer (1 sec)
-    private int secondsRemaining; // 10 minute = 600 secunde
+    // executor folosit deocamdată doar pentru browser (auto close)
+    private static final ScheduledExecutorService S =
+            Executors.newScheduledThreadPool(2);
+    private static ScheduledFuture<?> autoClose;
 
-    public Lab5App() {
-        super("Lab 5 - Funcții de nivel înalt ale SO");
+    public static void main(String[] a) {
+        Scanner in = new Scanner(System.in);
 
-        initGui();
-        initWindowListener();
+        while (true) {
+            System.out.println("""
+                1. Pornește Edge (3 taburi, auto 10 min)
+                2. Oprește Edge
+                0. Ieșire
+            """);
 
-        setSize(900, 600);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
+            System.out.print("Alege opțiunea: ");
+            String opt = in.nextLine().trim();
 
-    private void initGui() {
-        setLayout(new BorderLayout());
-
-        // == PANOU DE SUS: doar browser ==
-        JPanel topPanel = new JPanel(new GridLayout(1, 1, 10, 10));
-
-        // -- Panel browser --
-        JPanel browserPanel = new JPanel();
-        browserPanel.setBorder(BorderFactory.createTitledBorder("Control browser (Edge)"));
-        browserPanel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc1 = new GridBagConstraints();
-        gbc1.insets = new Insets(5, 5, 5, 5);
-        gbc1.fill = GridBagConstraints.HORIZONTAL;
-        gbc1.gridx = 0; gbc1.gridy = 0; gbc1.gridwidth = 2;
-
-        startBrowserBtn = new JButton("Pornește Edge (10 min)");
-        stopBrowserBtn = new JButton("Oprește Edge");
-        stopBrowserBtn.setEnabled(false);
-
-        browserStatusLabel = new JLabel("Status: oprit");
-        timerLabel = new JLabel("Timer: 00:00");
-
-        // Butoane
-        browserPanel.add(startBrowserBtn, gbc1);
-        gbc1.gridy++;
-        browserPanel.add(stopBrowserBtn, gbc1);
-        gbc1.gridy++;
-
-        // Status + timer
-        gbc1.gridwidth = 1;
-        browserPanel.add(browserStatusLabel, gbc1);
-        gbc1.gridx = 1;
-        browserPanel.add(timerLabel, gbc1);
-
-        topPanel.add(browserPanel);
-
-        add(topPanel, BorderLayout.NORTH);
-
-        // == ZONA DE LOG ==
-        logArea = new JTextArea();
-        logArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(logArea);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Log aplicație"));
-
-        add(scrollPane, BorderLayout.CENTER);
-
-        // == ASOCIERE BUTOANE ==
-        attachActions();
-    }
-
-    private void initWindowListener() {
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                // Oprim timer-ul browserului înainte de închidere
-                if (browserTimer != null && browserTimer.isRunning()) {
-                    browserTimer.stop();
+            switch (opt) {
+                case "1" -> startBrowser();
+                case "2" -> stopBrowser("manual");
+                case "0" -> {
+                    stopBrowser("exit");
+                    S.shutdownNow();
+                    return;
                 }
+                default -> System.out.println("Opțiune invalidă.");
             }
-        });
-    }
-
-    private void attachActions() {
-        // == BROWSER ==
-        startBrowserBtn.addActionListener(e -> startBrowserWithTimer());
-        stopBrowserBtn.addActionListener(e -> stopBrowserManual());
-    }
-
-    // == LOGICĂ BROWSER ==
-    private void startBrowserWithTimer() {
-        try {
-            // pornește Edge cu tab-uri
-            ProcessBuilder pb = new ProcessBuilder();
-            pb.command().add(EDGE_PATH);
-            for (String url : URLS) {
-                pb.command().add(url);
-            }
-            pb.start();
-
-            log("Browser Edge a fost pornit.");
-            browserStatusLabel.setText("Status: pornit");
-
-            startBrowserBtn.setEnabled(false);
-            stopBrowserBtn.setEnabled(true);
-
-            // 10 minute = 600 secunde
-            secondsRemaining = 10 * 60;
-            updateTimerLabel();
-
-            browserTimer = new Timer(1000, e -> {
-                secondsRemaining--;
-                updateTimerLabel();
-                if (secondsRemaining <= 0) {
-                    ((Timer) e.getSource()).stop();
-                    stopBrowserAuto();
-                }
-            });
-            browserTimer.start();
-
-        } catch (IOException ex) {
-            log("Eroare la pornirea browserului: " + ex.getMessage());
-            ex.printStackTrace();
         }
     }
 
-    private void updateTimerLabel() {
-        int minutes = secondsRemaining / 60;
-        int seconds = secondsRemaining % 60;
-        timerLabel.setText(String.format("Timer: %02d:%02d", minutes, seconds));
-    }
-
-    private void stopBrowserManual() {
-        if (browserTimer != null && browserTimer.isRunning()) {
-            browserTimer.stop();
-        }
-        stopBrowserProcess("manual");
-    }
-
-    private void stopBrowserAuto() {
-        stopBrowserProcess("automat (10 minute)");
-    }
-
-    private void stopBrowserProcess(String reason) {
+    // ---- BROWSER ----
+    private static void startBrowser() {
         try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    "cmd", "/c", "taskkill /IM msedge.exe /F /T"
+            ProcessBuilder p = new ProcessBuilder();
+            p.command().add(EDGE);
+            for (String u : URLS) p.command().add(u);
+            p.start();
+            log("Edge pornit");
+
+            if (autoClose != null && !autoClose.isDone()) {
+                autoClose.cancel(true);
+            }
+            autoClose = S.schedule(
+                    () -> stopBrowser("automat 10 min"),
+                    10, TimeUnit.MINUTES
             );
-            pb.inheritIO();
-            pb.start();
-
-            log("Browser Edge a fost închis " + reason + ".");
-            browserStatusLabel.setText("Status: oprit");
-            startBrowserBtn.setEnabled(true);
-            stopBrowserBtn.setEnabled(false);
-
-        } catch (IOException ex) {
-            log("Eroare la închiderea browserului: " + ex.getMessage());
-            ex.printStackTrace();
+        } catch (IOException e) {
+            log("Eroare browser: " + e.getMessage());
         }
     }
 
-    // == LOG GENERAL (doar în GUI) ==
-    private synchronized void log(String message) {
-        SwingUtilities.invokeLater(() -> {
-            logArea.append(message + "\n");
-            logArea.setCaretPosition(logArea.getDocument().getLength());
-        });
+    private static void stopBrowser(String r) {
+        try {
+            if (autoClose != null && !autoClose.isDone()) {
+                autoClose.cancel(true);
+            }
+            new ProcessBuilder("cmd", "/c", "taskkill /IM msedge.exe /F /T")
+                    .inheritIO()
+                    .start();
+            log("Edge oprit (" + r + ")");
+        } catch (IOException e) {
+            log("Eroare stop browser: " + e.getMessage());
+        }
     }
 
-    // == MAIN ==
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            Lab5App app = new Lab5App();
-            app.setVisible(true);
-        });
+    // ---- LOG ----
+    private static void log(String m) {
+        String x = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                + " - " + m;
+        System.out.println(x);
+        try {
+            Files.createDirectories(LOG.getParent());
+            Files.writeString(LOG, x + System.lineSeparator(),
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (IOException ignored) {}
     }
 }
