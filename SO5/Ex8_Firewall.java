@@ -1,10 +1,12 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Ex8_Firewall - Configurare firewall + verificări de rețea
- * WINDOWS: netsh + ipconfig + ping + tracert
- * LINUX: iptables + ip + ping + traceroute
+ * Ex8_Firewall - Configurare firewall + verificări de rețea (LINUX ONLY)
+ * Folosește: iptables + ip + ping + traceroute
  */
 public class Ex8_Firewall {
     
@@ -12,78 +14,162 @@ public class Ex8_Firewall {
     private static final int PORT = 8080;
     
     /**
-     * Detectare automată sistem de operare
-     */
-    private static boolean isWindows() {
-        return System.getProperty("os.name").toLowerCase().contains("win");
-    }
-    
-    /**
-     * Metodă publică statică - EXECUTĂ pentru OS curent
+     * Metodă publică statică - EXECUTĂ configurare firewall
      */
     public static void executeForCurrentOS() throws Exception {
-        if (isWindows()) {
-            configureFirewallWindows();
-        } else {
-            configureFirewallLinux();
-        }
+        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
+        System.out.println("║         EXERCIȚIUL 8 - CONFIGURARE FIREWALL (LINUX)         ║");
+        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+        
+        configureFirewallLinux();
     }
     
     /**
-     * Implementare WINDOWS: netsh + ipconfig + ping + tracert
-     */
-    private static void configureFirewallWindows() throws IOException, InterruptedException {
-        System.out.println("\n=== [EX8 WINDOWS] Configurare netsh firewall ===");
-        
-        // Șterge regula veche dacă există
-        executeCommand(Arrays.asList(
-            "netsh", "advfirewall", "firewall", "delete", "rule",
-            "name=" + FIREWALL_RULE_NAME
-        ), false);
-        
-        List<String> cmd = Arrays.asList(
-            "netsh", "advfirewall", "firewall", "add", "rule",
-            "name=" + FIREWALL_RULE_NAME,
-            "dir=in", "action=allow", "protocol=TCP",
-            "localport=" + PORT, "enable=yes", "profile=any"
-        );
-        
-        System.out.println("Executăm: netsh advfirewall ...");
-        int exitCode = executeCommand(cmd, true);
-        
-        if (exitCode == 0) {
-            System.out.println("SUCCES: Regulă firewall creată pentru portul " + PORT);
-        } else {
-            System.err.println("EȘUAT. Rulează ca Administrator!");
-        }
-        
-        // Verificări rețea obligatorii conform cerinței
-        System.out.println("\n--- Verificări de rețea Windows ---");
-        
-        System.out.println("\n1. Configurare IP (ipconfig):");
-        executeCommand(Arrays.asList("ipconfig", "/all"), true);
-        
-        System.out.println("\n2. Test ping localhost:");
-        executeCommand(Arrays.asList("ping", "127.0.0.1", "-n", "3"), true);
-        
-        System.out.println("\n3. Test tracert către 8.8.8.8:");
-        executeCommand(Arrays.asList("tracert", "-d", "8.8.8.8"), true);
-    }
-    
-    /**
-     * Implementare LINUX: iptables + ip + ping + traceroute
+     * Implementare LINUX: iptables + verificări de rețea
      */
     private static void configureFirewallLinux() throws IOException, InterruptedException {
-        System.out.println("\n=== [EX8 LINUX] Configurare iptables + verificări ===");
+        System.out.println("\n=== Configurare iptables ===");
         
-        // Verificare sudo
-        int sudoCheck = executeCommand(Arrays.asList("sudo", "-v"), false);
-        if (sudoCheck != 0) {
-            System.err.println("EROARE: Rulează cu sudo (sudo java Ex8_Firewall)");
+        // Verificare dacă rulează cu sudo
+        if (!hasSudoAccess()) {
+            System.err.println("❌ EROARE: Acest exercițiu necesită privilegii root!");
+            System.err.println("💡 Rulați programul cu: sudo java -cp out OSManagerMain");
             return;
         }
         
-        // Adăugare regulă iptables
+        // Verificare dacă iptables există
+        if (!isCommandAvailable("iptables")) {
+            System.err.println("❌ EROARE: iptables nu este instalat!");
+            System.err.println("💡 Instalați cu: sudo apt install iptables");
+            return;
+        }
+        
+        // Verificare dacă regula există deja
+        if (ruleExists()) {
+            System.out.println("⚠️  Regula pentru portul " + PORT + " există deja.");
+            System.out.print("Doriți să o înlocuiți? (y/n): ");
+            
+            try {
+                int ch = System.in.read();
+                if (ch != 'y' && ch != 'Y') {
+                    System.out.println("❌ Operație anulată.");
+                    return;
+                }
+                // Consumă restul liniei
+                while (System.in.available() > 0) {
+                    System.in.read();
+                }
+            } catch (Exception e) {
+                // Continuă dacă nu poate citi input
+            }
+            
+            // Șterge regula existentă
+            deleteExistingRule();
+        }
+        
+        // Adăugare regulă nouă
+        addFirewallRule();
+        
+        // Salvare permanentă
+        saveFirewallRules();
+        
+        // Verificări de rețea
+        performNetworkChecks();
+    }
+    
+    /**
+     * Verifică dacă avem acces sudo/root
+     */
+    private static boolean hasSudoAccess() {
+        try {
+            Process p = new ProcessBuilder("sudo", "-n", "true")
+                .redirectErrorStream(true)
+                .start();
+            return p.waitFor() == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Verifică dacă o comandă este disponibilă
+     */
+    private static boolean isCommandAvailable(String command) {
+        try {
+            Process p = new ProcessBuilder("which", command)
+                .redirectErrorStream(true)
+                .start();
+            return p.waitFor() == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Verifică dacă regula există deja
+     */
+    private static boolean ruleExists() throws IOException, InterruptedException {
+        List<String> cmd = Arrays.asList("sudo", "iptables", "-L", "INPUT", "-n");
+        
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        
+        boolean found = false;
+        try (BufferedReader reader = new BufferedReader(
+                 new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("dpt:" + PORT) || line.contains(FIREWALL_RULE_NAME)) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        process.waitFor();
+        return found;
+    }
+    
+    /**
+     * Șterge regula existentă
+     */
+    private static void deleteExistingRule() throws IOException, InterruptedException {
+        System.out.println("🗑️  Ștergere regulă existentă...");
+        
+        // Găsește numărul liniei regulii
+        List<String> listCmd = Arrays.asList("sudo", "iptables", "-L", "INPUT", "-n", "--line-numbers");
+        ProcessBuilder pb = new ProcessBuilder(listCmd);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        
+        int lineNumber = -1;
+        try (BufferedReader reader = new BufferedReader(
+                 new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.matches("^\\d+.*") && (line.contains("dpt:" + PORT) || line.contains(FIREWALL_RULE_NAME))) {
+                    String[] parts = line.trim().split("\\s+");
+                    lineNumber = Integer.parseInt(parts[0]);
+                    break;
+                }
+            }
+        }
+        process.waitFor();
+        
+        if (lineNumber > 0) {
+            List<String> delCmd = Arrays.asList("sudo", "iptables", "-D", "INPUT", String.valueOf(lineNumber));
+            executeCommand(delCmd, false);
+            System.out.println("✅ Regulă ștearsă.");
+        }
+    }
+    
+    /**
+     * Adaugă regula firewall pentru portul 8080
+     */
+    private static void addFirewallRule() throws IOException, InterruptedException {
+        System.out.println("\n📝 Adăugare regulă iptables pentru portul " + PORT + "...");
+        
         List<String> cmd = Arrays.asList(
             "sudo", "iptables", "-A", "INPUT",
             "-p", "tcp", "--dport", String.valueOf(PORT),
@@ -91,67 +177,123 @@ public class Ex8_Firewall {
             "-m", "comment", "--comment", FIREWALL_RULE_NAME
         );
         
-        System.out.println("Executăm: sudo iptables ...");
-        int exitCode = executeCommand(cmd, true);
+        System.out.println("🚀 Comandă: sudo iptables -A INPUT -p tcp --dport " + PORT + " -j ACCEPT");
+        int exitCode = executeCommand(cmd, false);
         
         if (exitCode == 0) {
-            System.out.println("SUCCES: Regulă iptables creată pentru portul " + PORT);
-            
-            // Salvare permanentă
-            try {
-                executeCommand(Arrays.asList("sudo", "iptables-save"), true);
-                System.out.println("Regulă salvată permanent.");
-            } catch (Exception e) {
-                System.out.println("Salvează manual: sudo iptables-save > /etc/iptables/rules.v4");
-            }
+            System.out.println("✅ SUCCES: Regulă iptables creată pentru portul " + PORT);
         } else {
-            System.err.println("EȘUAT. Verifică iptables.");
+            System.err.println("❌ EȘUAT: Nu s-a putut crea regula. Verificați iptables.");
         }
-        
-        // Verificări rețea obligatorii
-        System.out.println("\n--- Verificări de rețea Linux ---");
-        
-        System.out.println("\n1. Interfețe de rețea (ip addr):");
-        executeCommand(Arrays.asList("ip", "addr", "show"), true);
-        
-        System.out.println("\n2. Test ping localhost:");
-        executeCommand(Arrays.asList("ping", "-c", "3", "127.0.0.1"), true);
-        
-        System.out.println("\n3. Test traceroute către 8.8.8.8:");
-        executeCommand(Arrays.asList("traceroute", "-n", "8.8.8.8"), true);
-        
-        // Verificare regulă specifică
-        System.out.println("\n4. Verificare regulă iptables:");
-        executeCommand(Arrays.asList("sudo", "iptables", "-L", "-n", "--line-numbers"), true);
     }
     
     /**
-     * Verificare implementare - platformă specifică
+     * Salvare permanentă a regulilor firewall
      */
-    public static void verifyImplementation(boolean isWindows) throws Exception {
-        System.out.println("\n=== VERIFICARE Ex8 - FIREWALL ȘI REȚEA ===");
+    private static void saveFirewallRules() {
+        System.out.println("\n💾 Salvare permanentă a regulilor...");
         
-        // Verificare regulă firewall
-        List<String> fwCmd;
-        if (isWindows) {
-            fwCmd = Arrays.asList(
-                "netsh", "advfirewall", "firewall", "show", "rule",
-                "name=" + FIREWALL_RULE_NAME
-            );
+        try {
+            // Încercăm iptables-save cu diverse metode
+            if (isCommandAvailable("netfilter-persistent")) {
+                executeCommand(Arrays.asList("sudo", "netfilter-persistent", "save"), false);
+                System.out.println("✅ Reguli salvate cu netfilter-persistent");
+            } else if (isCommandAvailable("iptables-save")) {
+                // Salvare manuală
+                System.out.println("💡 Pentru salvare permanentă, rulați manual:");
+                System.out.println("   sudo iptables-save | sudo tee /etc/iptables/rules.v4");
+                System.out.println("   SAU instalați: sudo apt install iptables-persistent");
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️  Nu s-a putut salva automat. Salvați manual cu:");
+            System.out.println("   sudo iptables-save | sudo tee /etc/iptables/rules.v4");
+        }
+    }
+    
+    /**
+     * Efectuează verificări de rețea obligatorii
+     */
+    private static void performNetworkChecks() throws IOException, InterruptedException {
+        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
+        System.out.println("║              VERIFICĂRI DE REȚEA - LINUX                     ║");
+        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+        
+        // 1. Interfețe de rețea
+        System.out.println("\n1️⃣  Interfețe de rețea (ip addr):");
+        System.out.println("─────────────────────────────────────────");
+        if (isCommandAvailable("ip")) {
+            executeCommand(Arrays.asList("ip", "addr", "show"), true);
         } else {
-            fwCmd = Arrays.asList("sudo", "iptables", "-L", "-n", "|", "grep", String.valueOf(PORT));
+            System.out.println("⚠️  Comanda 'ip' nu este disponibilă");
         }
         
-        System.out.println("1. Regulă firewall:");
-        executeCommand(fwCmd, true);
+        // 2. Test ping localhost
+        System.out.println("\n2️⃣  Test conectivitate localhost (ping):");
+        System.out.println("─────────────────────────────────────────");
+        if (isCommandAvailable("ping")) {
+            executeCommand(Arrays.asList("ping", "-c", "3", "127.0.0.1"), true);
+        } else {
+            System.out.println("⚠️  Comanda 'ping' nu este disponibilă");
+        }
         
-        // Comandă de rețea (ipconfig/ip addr)
-        List<String> ipCmd = isWindows ? 
-            Arrays.asList("ipconfig") : 
-            Arrays.asList("ip", "addr", "show");
+        // 3. Test traceroute
+        System.out.println("\n3️⃣  Traseu către 8.8.8.8 (traceroute):");
+        System.out.println("─────────────────────────────────────────");
+        if (isCommandAvailable("traceroute")) {
+            executeCommand(Arrays.asList("traceroute", "-n", "-m", "10", "8.8.8.8"), true);
+        } else {
+            System.out.println("⚠️  Comanda 'traceroute' nu este instalată");
+            System.out.println("💡 Instalați cu: sudo apt install traceroute");
+        }
         
-        System.out.println("\n2. Configurare rețea:");
-        executeCommand(ipCmd, true);
+        // 4. Verificare reguli iptables
+        System.out.println("\n4️⃣  Reguli iptables curente:");
+        System.out.println("─────────────────────────────────────────");
+        executeCommand(Arrays.asList("sudo", "iptables", "-L", "INPUT", "-n", "--line-numbers"), true);
+    }
+    
+    /**
+     * Verificare implementare
+     */
+    public static void verifyImplementation() throws Exception {
+        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
+        System.out.println("║          VERIFICARE EXERCIȚIUL 8 - FIREWALL                 ║");
+        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+        
+        // Verificare reguli firewall
+        System.out.println("\n1️⃣  Reguli firewall pentru portul " + PORT + ":");
+        System.out.println("─────────────────────────────────────────");
+        
+        List<String> fwCmd = Arrays.asList("sudo", "iptables", "-L", "INPUT", "-n", "-v");
+        ProcessBuilder pb = new ProcessBuilder(fwCmd);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        
+        boolean found = false;
+        try (BufferedReader reader = new BufferedReader(
+                 new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println("   " + line);
+                if (line.contains("dpt:" + PORT) || line.contains(FIREWALL_RULE_NAME)) {
+                    found = true;
+                }
+            }
+        }
+        process.waitFor();
+        
+        if (found) {
+            System.out.println("\n✅ Regula pentru portul " + PORT + " este activă!");
+        } else {
+            System.out.println("\n❌ Regula pentru portul " + PORT + " NU a fost găsită!");
+        }
+        
+        // Configurare rețea
+        System.out.println("\n2️⃣  Configurare rețea actuală:");
+        System.out.println("─────────────────────────────────────────");
+        if (isCommandAvailable("ip")) {
+            executeCommand(Arrays.asList("ip", "-brief", "addr", "show"), true);
+        }
     }
     
     /**
@@ -170,11 +312,28 @@ public class Ex8_Firewall {
                      new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    System.out.println("   > " + line);
+                    System.out.println("   " + line);
                 }
             }
         }
         
         return process.waitFor();
+    }
+    
+    /**
+     * Main pentru testare directă
+     */
+    public static void main(String[] args) {
+        try {
+            if (args.length > 0 && args[0].equals("--verify")) {
+                verifyImplementation();
+            } else {
+                executeForCurrentOS();
+            }
+        } catch (Exception e) {
+            System.err.println("❌ EROARE: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 }

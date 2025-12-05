@@ -5,58 +5,16 @@ import java.util.*;
 
 /**
  * Ex2_Autostart - Adăugare la pornirea automată (fără reboot automat)
- * WINDOWS: Registry HKCU\...\Run
  * LINUX: .desktop file în ~/.config/autostart/ (universal, funcționează pe orice DE)
  */
 public class Ex2_Autostart {
     
     private static final String APP_NAME = "SO5_LabApp";
     
-    private static boolean isWindows() {
-        return System.getProperty("os.name").toLowerCase().contains("win");
-    }
-    
     public static void executeForCurrentOS() throws Exception {
-        if (isWindows()) {
-            addToStartupWindows();
-            System.out.println("\n✅ Configurare completă!");
-            System.out.println("💡 Pentru a activa: reporniți sistemul sau logout/login");
-        } else {
-            addToStartupLinux();
-            System.out.println("\n✅ Configurare completă!");
-            System.out.println("💡 Pentru a activa: logout și login din nou");
-        }
-    }
-    
-    /**
-     * WINDOWS: Adăugare în Registry
-     */
-    private static void addToStartupWindows() throws IOException, InterruptedException {
-        System.out.println("\n=== [EX2 WINDOWS] Adăugare în Registry ===");
-        
-        String workingDir = getRealWorkingDirectory();
-        String command = "cmd /c start /d \"" + workingDir + "\" java -cp out OSManagerMain";
-        
-        System.out.println("📁 Directory: " + workingDir);
-        System.out.println("🚀 Comandă: " + command);
-        
-        List<String> cmd = Arrays.asList(
-            "reg", "add",
-            "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-            "/v", APP_NAME,
-            "/t", "REG_SZ",
-            "/d", command,
-            "/f"
-        );
-        
-        int exitCode = executeCommand(cmd, true);
-        
-        if (exitCode != 0) {
-            System.err.println("❌ EȘUAT! Cod: " + exitCode);
-            throw new RuntimeException("Configurare Registry eșuată");
-        }
-        
-        System.out.println("✅ Registry configurat cu succes!");
+        addToStartupLinux();
+        System.out.println("\n✅ Configurare completă!");
+        System.out.println("💡 Pentru a activa: logout și login din nou");
     }
     
     /**
@@ -148,23 +106,21 @@ public class Ex2_Autostart {
         // Construiește comanda în funcție de terminal
         switch (terminal) {
             case "gnome-terminal":
-                return "/usr/bin/gnome-terminal --working-directory=" + workingDir + 
-                       " -- bash -c '" + javaCmd + "; exec bash'";
+                return "gnome-terminal -- bash -c 'cd " + workingDir + " && " + javaCmd + "; exec bash'";
                 
             case "konsole":
-                return "/usr/bin/konsole --workdir " + workingDir + 
+                return "konsole --workdir " + workingDir + 
                        " -e bash -c '" + javaCmd + "; exec bash'";
                 
             case "xfce4-terminal":
-                return "/usr/bin/xfce4-terminal --working-directory=" + workingDir + 
-                       " -e \"bash -c '" + javaCmd + "; exec bash'\"";
+                return "xfce4-terminal --working-directory=" + workingDir + 
+                       " -e 'bash -c \"" + javaCmd + "; exec bash\"'";
                 
             case "mate-terminal":
-                return "/usr/bin/mate-terminal --working-directory=" + workingDir + 
-                       " -- bash -c '" + javaCmd + "; exec bash'";
+                return "mate-terminal -- bash -c 'cd " + workingDir + " && " + javaCmd + "; exec bash'";
                 
             case "xterm":
-                return "/usr/bin/xterm -e bash -c 'cd " + workingDir + " && " + javaCmd + "; exec bash'";
+                return "xterm -e bash -c 'cd " + workingDir + " && " + javaCmd + "; exec bash'";
                 
             default:
                 // Fallback universal
@@ -251,43 +207,31 @@ public class Ex2_Autostart {
     /**
      * Verificare implementare
      */
-    public static void verifyImplementation(boolean isWin) throws Exception {
+    public static void verifyImplementation() throws Exception {
         System.out.println("\n=== VERIFICARE Ex2 - AUTOSTART ===");
         
-        if (isWin) {
-            // Windows: verifică Registry
-            List<String> cmd = Arrays.asList(
-                "reg", "query",
-                "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-                "/v", APP_NAME
-            );
-            System.out.println("📋 Verificare Registry:");
-            executeCommand(cmd, true);
-            
+        // Linux: verifică .desktop file
+        String userHome;
+        String realUser = System.getenv("SUDO_USER");
+        if (realUser != null && !realUser.isEmpty()) {
+            userHome = "/home/" + realUser;
         } else {
-            // Linux: verifică .desktop file
-            String userHome;
-            String realUser = System.getenv("SUDO_USER");
-            if (realUser != null && !realUser.isEmpty()) {
-                userHome = "/home/" + realUser;
-            } else {
-                userHome = System.getProperty("user.home");
+            userHome = System.getProperty("user.home");
+        }
+        
+        Path desktopFile = Paths.get(userHome, ".config", "autostart", APP_NAME + ".desktop");
+        
+        System.out.println("📋 Verificare .desktop file: " + desktopFile);
+        
+        if (Files.exists(desktopFile)) {
+            System.out.println("✅ Fișier găsit!");
+            System.out.println("\n📄 Conținut:");
+            List<String> lines = Files.readAllLines(desktopFile);
+            for (String line : lines) {
+                System.out.println("   > " + line);
             }
-            
-            Path desktopFile = Paths.get(userHome, ".config", "autostart", APP_NAME + ".desktop");
-            
-            System.out.println("📋 Verificare .desktop file: " + desktopFile);
-            
-            if (Files.exists(desktopFile)) {
-                System.out.println("✅ Fișier găsit!");
-                System.out.println("\n📄 Conținut:");
-                List<String> lines = Files.readAllLines(desktopFile);
-                for (String line : lines) {
-                    System.out.println("   > " + line);
-                }
-            } else {
-                System.out.println("❌ Fișier NU a fost găsit!");
-            }
+        } else {
+            System.out.println("❌ Fișier NU a fost găsit!");
         }
     }
     
@@ -320,7 +264,7 @@ public class Ex2_Autostart {
     public static void main(String[] args) {
         try {
             if (args.length > 0 && args[0].equals("--verify")) {
-                verifyImplementation(isWindows());
+                verifyImplementation();
             } else {
                 executeForCurrentOS();
             }
