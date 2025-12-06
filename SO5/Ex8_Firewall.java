@@ -17,9 +17,9 @@ public class Ex8_Firewall {
      * Metodă publică statică - EXECUTĂ configurare firewall
      */
     public static void executeForCurrentOS() throws Exception {
-        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
-        System.out.println("║         EXERCIȚIUL 8 - CONFIGURARE FIREWALL (LINUX)         ║");
-        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+
+        System.out.println(" EXERCIȚIUL 8 - CONFIGURARE FIREWALL (LINUX) ");
+
         
         configureFirewallLinux();
     }
@@ -214,10 +214,9 @@ public class Ex8_Firewall {
      * Efectuează verificări de rețea obligatorii
      */
     private static void performNetworkChecks() throws IOException, InterruptedException {
-        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
-        System.out.println("║              VERIFICĂRI DE REȚEA - LINUX                     ║");
-        System.out.println("╚══════════════════════════════════════════════════════════════╝");
-        
+
+        System.out.println(" VERIFICĂRI DE REȚEA - LINUX ");
+
         // 1. Interfețe de rețea
         System.out.println("\n1️⃣  Interfețe de rețea (ip addr):");
         System.out.println("─────────────────────────────────────────");
@@ -256,9 +255,9 @@ public class Ex8_Firewall {
      * Verificare implementare
      */
     public static void verifyImplementation() throws Exception {
-        System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
-        System.out.println("║          VERIFICARE EXERCIȚIUL 8 - FIREWALL                 ║");
-        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+
+        System.out.println("VERIFICARE EXERCIȚIUL 8 - FIREWALL");
+
         
         // Verificare reguli firewall
         System.out.println("\n1️⃣  Reguli firewall pentru portul " + PORT + ":");
