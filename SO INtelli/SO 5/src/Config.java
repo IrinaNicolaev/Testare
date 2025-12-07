@@ -19,9 +19,9 @@ public class Config {
     public static final String LOG_FILE = "app.log";
 
     // === Telegram ===
-    // TODO: pune aici token-ul primit de la BotFather, de forma: 123456789:ABC....
+
     public static final String TELEGRAM_BOT_TOKEN = "8572903939:AAEuHjMbRZkbalvYQ8FBRlgIPRtTsrRLPjY";
-    // TODO: pune aici chat id-ul unde vrei să trimiți mesajele (ex. ID-ul tău)
+
     public static final String[] TELEGRAM_CHAT_IDS = {
             "884060708",
             "6958201023"
