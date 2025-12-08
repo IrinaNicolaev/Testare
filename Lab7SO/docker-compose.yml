@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  html:
+    build: ./html
+    ports:
+      - "8080:80"
+    depends_on:
+      - images
+      - css
+
+  images:
+    build: ./images
+    ports:
+      - "8082:80"
+
+  css:
+    build: ./css
+    ports:
+      - "8081:80"
+
+  lab1:
+    build: ./lab1Java
+    environment:
+      - DISPLAY=host.docker.internal:0

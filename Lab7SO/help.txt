@@ -1,0 +1,14 @@
+Comenzi de rulare:
+    - pentru a rula tot (website + Java):
+      - pornește XQuartz
+      - în terminal: docker compose -f config.yaml up --build
+      - pagina web: http://localhost:8080
+      - aplicația Java ar trebui să apară singură
+
+    - doar pentru aplicația Java:
+      - pornește XQuartz
+      - în terminal:
+            cd lab1Java
+            docker build -t lab1-app .
+            $env:DISPLAY = "host.docker.internal:0.0"
+            docker run --rm -e DISPLAY lab1-app
