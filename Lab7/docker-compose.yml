@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "8080:80"
+    depends_on:
+      - image
+      - css
+
+  image:
+    build: ./image
+    ports:
+      - "8081:80"
+
+  css:
+    build: ./css
+    ports:
+      - "8082:80"
+
+  java:
+    build: ./Lab1
+    ports:
+      - "6080:6080"
