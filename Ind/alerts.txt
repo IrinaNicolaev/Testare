@@ -1,0 +1,2 @@
+INTERVAL;Youtube;;15;0;;D:\OneDrive\Desktop\(561) YouTube.url;false;-1;true;14;
+TIME;as;14:52;0;0;;;true;-1;true;0;

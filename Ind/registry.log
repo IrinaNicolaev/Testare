@@ -1,0 +1,48 @@
+write: x=643 ok=0
+write: y=281 ok=0
+read: x=643
+read: y=281
+write: x=643 ok=0
+write: y=281 ok=0
+read: x=643
+read: y=281
+write: AlertScheduler="C:\Users\irser\AppData\Roaming\Code\User\workspaceStorage\52ff86de9cbd647e7469463bcf86e61c\redhat.java\jdt_ws\Ind_f171ec7a\bin" ok=0
+delete: AlertScheduler ok=0
+write: AlertScheduler="C:\Users\irser\AppData\Roaming\Code\User\workspaceStorage\52ff86de9cbd647e7469463bcf86e61c\redhat.java\jdt_ws\Ind_f171ec7a\bin" ok=0
+write: x=390 ok=0
+write: y=217 ok=0
+read: x=390
+read: y=217
+read: AlertScheduler=C:\Users\irser\AppData\Roaming\Code\User\workspaceStorage\52ff86de9cbd647e7469463bcf86e61c\redhat.java\jdt_ws\Ind_f171ec7a\bin
+write: x=390 ok=0
+write: y=217 ok=0
+read: x=390
+read: y=217
+read: AlertScheduler=C:\Users\irser\AppData\Roaming\Code\User\workspaceStorage\52ff86de9cbd647e7469463bcf86e61c\redhat.java\jdt_ws\Ind_f171ec7a\bin
+write: x=390 ok=0
+write: y=217 ok=0
+read: x=390
+read: y=217
+read: AlertScheduler=C:\Users\irser\AppData\Roaming\Code\User\workspaceStorage\52ff86de9cbd647e7469463bcf86e61c\redhat.java\jdt_ws\Ind_f171ec7a\bin
+write: x=390 ok=0
+write: y=217 ok=0
+read: x=390
+read: y=217
+read: AlertScheduler=C:\Users\irser\AppData\Roaming\Code\User\workspaceStorage\52ff86de9cbd647e7469463bcf86e61c\redhat.java\jdt_ws\Ind_f171ec7a\bin
+read: x=390
+read: y=217
+read: AlertScheduler=C:\Users\irser\AppData\Roaming\Code\User\workspaceStorage\52ff86de9cbd647e7469463bcf86e61c\redhat.java\jdt_ws\Ind_f171ec7a\bin
+write: x=390 ok=0
+write: y=217 ok=0
+write: x=390 ok=0
+write: y=217 ok=0
+read: x=390
+read: y=217
+read: AlertScheduler=C:\Users\irser\AppData\Roaming\Code\User\workspaceStorage\52ff86de9cbd647e7469463bcf86e61c\redhat.java\jdt_ws\Ind_f171ec7a\bin
+write: x=390 ok=0
+write: y=217 ok=0
+read: x=390
+read: y=217
+read: AlertScheduler=C:\Users\irser\AppData\Roaming\Code\User\workspaceStorage\52ff86de9cbd647e7469463bcf86e61c\redhat.java\jdt_ws\Ind_f171ec7a\bin
+write: x=390 ok=0
+write: y=217 ok=0
